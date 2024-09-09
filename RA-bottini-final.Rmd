@@ -1,0 +1,422 @@
+---
+title: "RA_analysis"
+author: "Deepan Thiruppathy"
+date: "7/31/2024"
+
+---
+```{r}
+library(stringr)
+library(ggplot2)
+library(FactoMineR)
+library(factoextra)
+library(reshape)
+library(reshape2)
+library(gplots)
+library(RColorBrewer)
+library(dplyr)
+library(ggpubr)
+library (ANCOMBC)
+
+```
+
+###Theme function definitions
+
+```{r}
+
+theme_boxp <- function(){
+  
+  font <- "Times New Roman"
+  
+  theme_minimal() %+replace%
+    
+    theme(axis.title.y = element_text(angle = 90, size = 10), 
+          axis.title.x = element_blank(),   
+          axis.text.x = element_text(angle = 45, size = 10, color = "black"), 
+          axis.text.y = element_text(size = 10, color = "black"), 
+          
+          panel.background = element_rect(fill = "white"),  
+          axis.line.x = element_line(color = "black"), 
+          axis.line.y = element_line(color = "black"), 
+          
+          legend.text = element_text(size = 10, lineheight = 0.6), 
+          legend.spacing.y = unit(0.6, "mm"), 
+          legend.key.height = unit(2, "mm"), 
+          legend.key=element_rect(fill="white", color="black", linewidth = 0), 
+          legend.title = element_blank(), 
+          strip.background = element_rect(fill = NA, linetype = "solid", size = 1, colour = "black"), 
+          strip.text = element_text(size = 10, margin = margin(1,1,1,1)), 
+          panel.border = element_rect(fill = NA, size = 1),
+          panel.spacing.y = unit(1,"line"),
+    )
+}
+
+theme_pca <- function(){
+  
+  font <- "Times New Roman"
+  
+  theme_boxp() %+replace%
+    
+    theme(legend.position = "none", 
+          axis.title.y = element_text(angle = 90, size = 12, color = "black"),
+          axis.title.x = element_text(size = 12, color = "black"),
+          axis.text.x = element_text(size = 10), 
+          axis.text.y = element_text(size = 10),
+          )
+}
+
+reg_eq <- function(x,y) {
+  m <- lm(y ~ x)
+  as.character(
+    as.expression(
+      substitute(italic(y) == a + b %.% italic(x)*","~~italic(r)^2~"="~r2,
+                list(a = format(coef(m)[1], digits = 4),
+                b = format(coef(m)[2], digits = 4),
+                r2 = format(summary(m)$r.squared, digits = 3)))
+    )
+  )
+}
+
+```
+
+
+###Defining figure color vectors
+```{r}
+
+vec_col_patients <- c( "midnightblue", 
+               "yellow3",  "forestgreen", "chocolate", "plum", "cornflowerblue")
+
+vec_col_type <- c( "darkgoldenrod1", "blue4")
+
+family_cols <- c("Bacteroidaceae"="cyan3", "Prevotellaceae"="coral", "Verrucomicrobiaceae"="#1B9E77", "Porphyromonadaceae"="#B16548", "Lachnospiraceae"="#8068AE", "Rikenellaceae"="#D03792", "Ruminococcaceae"="#A66753", "Muribaculaceae"="#666666", "Alcaligenaceae"="#D9AA04", "Erysipelotrichaceae"="tomato4", "Clostridiaceae"="#927132", "Enterobacteriaceae"="#7FA718", "Veillonellaceae"="#BC4399", "Pseudomonadaceae"="#9D7426", "other"="grey")
+
+```
+
+###Importing Metadata file
+```{r}
+
+metadata <- read.delim("/media/deepan/Deepan/RA_Bottini/sample-metadata-wflownumbers.tsv", header = TRUE, sep = "\t", check.names = FALSE)[-1,]
+
+```
+
+
+###Generating PCA plots from imported phylo-RPCA, unweighted unifrac and jaccard distance matrices generated with QIIME2 (Bolyen et al., 2019)
+```{r, fig.height=4, fig.width=4}
+
+phylo_rpca <- read.delim("/media/deepan/Deepan/RA_Bottini/final_merged_tables_forwardonly/afterFMT/phylo-ordination/ordination_coords.csv", header = TRUE, sep = "\t", check.names = FALSE)#only plotting PC1 and PC2. 
+
+phylo_rpca <-  merge(phylo_rpca, metadata, by = "sample-ID", all.y = FALSE)
+
+#svg("/home/deepan/Dropbox/Deepan-Only/UCSD/Zengler Lab/MiscellaneousExpts/RA-Bottini/Ppaer-figures/MainFig1-phylorpca-patient.svg", height = 4, width = 4)
+ggplot(phylo_rpca, aes(x = PC1, y = PC2, fill = Patient)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "black") +
+  geom_point(size = 4, pch = 21) +
+  stat_ellipse(level = 0.95, geom = "polygon", alpha = 0.4) +
+  scale_fill_manual(values = rev(vec_col_patients)) +
+  labs(x = "PC1 (62.43%)", y = "PC2 (34.90%)") +
+  theme_pca()
+#dev.off()
+
+#svg("/home/deepan/Dropbox/Deepan-Only/UCSD/Zengler Lab/MiscellaneousExpts/RA-Bottini/Ppaer-figures/MainFig1-phylorpca-MouseType.svg", height = 4, width = 4)
+ggplot(phylo_rpca, aes(x = PC1, y = PC2, fill = MouseType)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "black") +
+  geom_point(size = 4, pch = 21) +
+  stat_ellipse(level = 0.95, geom = "polygon", alpha = 0.2) +
+  scale_fill_manual(values = rev(vec_col_type)) +
+  labs(x = "PC1 (62.43%)", y = "PC2 (34.90%)") +
+  theme_pca()
+#dev.off()
+
+#svg("/home/deepan/Dropbox/Deepan-Only/UCSD/Zengler Lab/MiscellaneousExpts/RA-Bottini/Ppaer-figures/MainFig1-phylorpca-beforeafterRA.svg", height = 4, width = 4)
+ggplot(phylo_rpca, aes(x = PC1, y = PC2, fill = BeforeAfterArthritisInd)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "black") +
+  geom_point(size = 4, pch = 21) +
+  stat_ellipse(level = 0.95, geom = "polygon", alpha = 0.2) +
+  scale_fill_manual(values = c("tomato4", "cornflowerblue")) +
+  labs(x = "PC1 (62.43%)", y = "PC2 (34.90%)") +
+  theme_pca()
+#dev.off()
+
+uunifrac <- read.delim("/media/deepan/Deepan/RA_Bottini/final_merged_tables_forwardonly/afterFMT/core-metrics-results/unweighted_unifrac_pcoa_results/ordination_coords.csv", header = TRUE, sep = "\t", check.names = FALSE)#only plotting PC1 and PC2. 
+
+uunifrac <-  merge(uunifrac, metadata, by = "sample-ID", all.y = FALSE)
+
+#svg("/home/deepan/Dropbox/Deepan-Only/UCSD/Zengler Lab/MiscellaneousExpts/RA-Bottini/Ppaer-figures/SuppFig1-uunifrac-Patient.svg", height = 4, width = 4)
+ggplot(uunifrac, aes(x = PC1, y = PC2, fill = Patient)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "black") +
+  geom_point(size = 4, pch = 21) +
+  stat_ellipse(level = 0.95, geom = "polygon", alpha = 0.4) +
+  scale_fill_manual(values = rev(vec_col_patients)) +
+  labs(x = "PC1 (32.68%)", y = "PC2 (13.54%)") +
+  theme_pca()
+#dev.off()
+
+#svg("/home/deepan/Dropbox/Deepan-Only/UCSD/Zengler Lab/MiscellaneousExpts/RA-Bottini/Ppaer-figures/SuppFig1-uunifrac-MouseType.svg", height = 4, width = 4)
+ggplot(uunifrac, aes(x = PC1, y = PC2, fill = MouseType)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "black") +
+  geom_point(size = 4, pch = 21) +
+  stat_ellipse(level = 0.95, geom = "polygon", alpha = 0.2) +
+  scale_fill_manual(values = rev(vec_col_type)) +
+  labs(x =  "PC1 (32.68%)", y = "PC2 (13.54%)") +
+  theme_pca()
+#dev.off()
+
+#svg("/home/deepan/Dropbox/Deepan-Only/UCSD/Zengler Lab/MiscellaneousExpts/RA-Bottini/Ppaer-figures/SuppFig1-uunifrac-beforeafterRA.svg", height = 4, width = 4)
+ggplot(uunifrac, aes(x = PC1, y = PC2, fill = BeforeAfterArthritisInd)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "black") +
+  geom_point(size = 4, pch = 21) +
+  stat_ellipse(level = 0.95, geom = "polygon", alpha = 0.2) +
+  scale_fill_manual(values = c("tomato4", "cornflowerblue")) +
+  labs(x =  "PC1 (32.68%)", y = "PC2 (13.54%)") +
+  theme_pca()
+#dev.off()
+
+jacc <- read.delim("/media/deepan/Deepan/RA_Bottini/final_merged_tables_forwardonly/afterFMT/core-metrics-results/jaccard_pcoa_results/ordination_coords.csv", header = TRUE, sep = "\t", check.names = FALSE)#only plotting PC1 and PC2. 
+
+jacc <-  merge(jacc, metadata, by = "sample-ID", all.y = FALSE)
+
+#svg("/home/deepan/Dropbox/Deepan-Only/UCSD/Zengler Lab/MiscellaneousExpts/RA-Bottini/Ppaer-figures/SuppFig1-jacc-Patient.svg", height = 4, width = 4)
+ggplot(jacc, aes(x = PC1, y = PC2, fill = Patient)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "black") +
+  geom_point(size = 4, pch = 21) +
+  stat_ellipse(level = 0.95, geom = "polygon", alpha = 0.4) +
+  scale_fill_manual(values = rev(vec_col_patients)) +
+  labs(x = "PC1 (22.45%)", y = "PC2 (18.59%)") +
+  theme_pca()
+#dev.off()
+
+#svg("/home/deepan/Dropbox/Deepan-Only/UCSD/Zengler Lab/MiscellaneousExpts/RA-Bottini/Ppaer-figures/SuppFig1-jacc-MouseType.svg", height = 4, width = 4)
+ggplot(jacc, aes(x = PC1, y = PC2, fill = MouseType)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "black") +
+  geom_point(size = 4, pch = 21) +
+  stat_ellipse(level = 0.95, geom = "polygon", alpha = 0.2) +
+  scale_fill_manual(values = rev(vec_col_type)) +
+  labs(x = "PC1 (22.45%)", y = "PC2 (18.59%)") +
+  theme_pca()
+#dev.off()
+
+#svg("/home/deepan/Dropbox/Deepan-Only/UCSD/Zengler Lab/MiscellaneousExpts/RA-Bottini/Ppaer-figures/SuppFig1-jacc-beforeafterRA.svg", height = 4, width = 4)
+ggplot(jacc, aes(x = PC1, y = PC2, fill = BeforeAfterArthritisInd)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "black") +
+  geom_point(size = 4, pch = 21) +
+  stat_ellipse(level = 0.95, geom = "polygon", alpha = 0.2) +
+  scale_fill_manual(values = c("tomato4", "cornflowerblue")) +
+  labs(x = "PC1 (22.45%)", y = "PC2 (18.59%)") +
+  theme_pca()
+#dev.off()
+
+```
+
+###Stacked barplots of original fecal samples family level
+
+```{r}
+
+fecal <- as.data.frame(t(read.delim("/media/deepan/Deepan/RA_Bottini/fecal_samples/level-6.csv", header = TRUE, sep = ",", check.names = FALSE)))
+
+colnames(fecal) <- fecal[1,]
+fecal <- fecal[c(-1, -nrow(fecal)),]
+fecal$Taxa <- rownames(fecal)
+fecal <- fecal[, c(ncol(fecal), 1:(ncol(fecal)-1))]
+rownames(fecal) <- c()
+fecal[,2:ncol(fecal)] <- sapply(fecal[,2:ncol(fecal)], as.numeric)
+colnames(fecal) <- c(colnames(fecal)[1], str_replace_all(colnames(fecal[,2:ncol(fecal)]), "RA0", "RA#"))
+
+fecal <- fecal[, c(1, 7, 5, 4, 3, 6, 2)]
+
+fecal$Taxa <- str_replace_all(fecal$Taxa, "\\[", "")
+fecal$Taxa <- str_replace_all(fecal$Taxa, "\\]", "")
+
+total_reads <- as.data.frame(apply(fecal[, -1], 2, sum))
+colnames(total_reads) <- "total_reads"
+total_reads$`sample-ID` <- rownames(total_reads)
+ggplot(total_reads, aes(x = `sample-ID`, y = total_reads)) + geom_bar(stat = "identity", width = 0.8) + theme_boxp() + theme(axis.text.x = element_text(angle = 90))##checking  the total number of reads in each sample
+
+fecal$mean <- apply(fecal[,-1], 1, function(x) mean(x))
+fecal <- fecal[order(fecal$mean, decreasing = TRUE),]
+
+fecal <- fecal[fecal$mean > 2.5,]
+fecal <- fecal[-nrow(fecal),]
+
+fecal$final_tax <- str_split(str_split(fecal$Taxa, ";f__", simplify= TRUE)[,2], ";", simplify = TRUE)[,1]
+fecal <- fecal[, c(1, ncol(fecal), 2:(ncol(fecal)-1))]
+
+fecal <- fecal[, -ncol(fecal)]
+
+fecal$final_tax[15:nrow(fecal)] <- "other"
+fecal$final_tax <- str_replace(fecal$final_tax, "S24-7", "Muribaculaceae")
+
+fecal_family <- aggregate(fecal[,c(-1, -2)], by = list(fecal$final_tax), sum)
+fecal_family$Group.1 <- ordered(fecal_family$Group.1, levels = c(unique(fecal$final_tax)))
+
+fecal$final_tax <- str_split(str_split(fecal$Taxa, ";g__", simplify= TRUE)[,2], ";", simplify = TRUE)[,1]
+fecal$final_tax <- ifelse(fecal$final_tax == "", "other", fecal$final_tax)
+fecal_genus <- aggregate(fecal[,c(-1, -2)], by = list(fecal$final_tax), sum)
+
+fecal_genus[,-1] <- apply(fecal_genus[,-1], 2, function(x) x/sum(x))
+
+```
+###Generating patient fecal sample barplot (Main Fig 4d)
+```{r}
+
+#svg("/home/deepan/Dropbox/Deepan-Only/UCSD/Zengler Lab/MiscellaneousExpts/RA-Bottini/Ppaer-figures/MainFig2-relative-og_fecal_family.svg", height = 4, width = 6)
+ggplot(melt(fecal_family), aes(x = variable, y = value, fill = Group.1)) + geom_bar(stat = "identity", position = "fill",width = 0.8) + 
+  scale_fill_manual(values = family_cols) +
+   theme(text = element_text(size = 15), axis.text.x = element_text(angle = 90)) + theme_boxp()
+#dev.off()
+
+```
+
+###Ratio of Prevotellaceae to Bacteroides (Main Fig 4e)
+
+```{r}
+
+temp <- fecal_genus[str_detect(fecal_genus$Group.1, "Prevotella|Bacteroides"),]
+#temp <- aggregate(temp[,c(-1, -2)], by = list(temp$final_tax), sum)
+
+#svg("/home/deepan/Dropbox/Deepan-Only/UCSD/Zengler Lab/MiscellaneousExpts/RA-Bottini/Ppaer-figures/MainFig-ratio-genus-PrevotellatoBaceroides.svg", height = 3, width = 2)
+ggplot(melt(temp), aes(x = variable, y = value, fill = Group.1)) + geom_bar(stat = "identity",width = 0.8) + 
+  scale_fill_manual(values = c("Bacteroides"="cyan3", "Prevotella"="coral")) +
+  scale_y_continuous(limits = c(0, 1)) +
+   theme_boxp() + theme(text = element_text(size = 15), axis.text.x = element_text(angle = 90), axis.title.y = element_blank(), legend.position = "none")
+#dev.off()
+
+```
+
+
+###Stacked barplots for all mice fecal samples
+
+```{r}
+
+data <- as.data.frame(t(read.delim("/media/deepan/Deepan/RA_Bottini/final_merged_tables_forwardonly/level-6.csv", header = TRUE, sep = ",", check.names = FALSE)))[1:86,]
+colnames(data) <- data[1,]
+data <- data[-1,]
+data$Taxa <- rownames(data)
+data <- data[, c(ncol(data), 1:(ncol(data)-1))]
+rownames(data) <- c()
+data[,2:ncol(data)] <- sapply(data[,2:ncol(data)], as.numeric)
+
+data[data$Taxa == "k__Bacteria;p__Bacteroidetes;c__Bacteroidia;o__Bacteroidales;f__Prevotellaceae;g__Prevotella", ]
+
+data$Taxa <- str_replace_all(data$Taxa, "\\[", "")
+data$Taxa <- str_replace_all(data$Taxa, "\\]", "")
+
+total_reads <- as.data.frame(apply(data[, -1], 2, sum))
+colnames(total_reads) <- "total_reads"
+total_reads$`sample-ID` <- rownames(total_reads)
+total_reads <- merge(total_reads, metadata, by = "sample-ID")
+ggplot(total_reads, aes(x = PatientTypebeforeafterRA, y = total_reads)) + geom_bar(stat = "identity", width = 0.8) + theme_boxp() + theme(axis.text.x = element_text(angle = 90))##checking total number of reads
+
+
+data$mean <- apply(data[,-1], 1, function(x) mean(x))
+data <- data[order(data$mean, decreasing = TRUE),]
+
+tax_names <- str_split(data$Taxa, ";", simplify = TRUE)
+
+data$final_tax <- str_split(str_split(data$Taxa, ";f__", simplify= TRUE)[,2], ";", simplify = TRUE)[,1]
+data$final_tax[data$final_tax == ""] <- "other"
+
+data <- data[, c(1, ncol(data), 2:(ncol(data)-1))]
+
+data <- data[, -ncol(data)]
+
+data$final_tax[25:nrow(data)] <- "other"
+data$final_tax <- str_replace(data$final_tax, "S24-7", "Muribaculaceae")
+
+data_family <- aggregate(data[,c(-1, -2)], by = list(data$final_tax), sum)
+data_family$Group.1 <- ordered(data_family$Group.1, levels = c(unique(data$final_tax)))
+
+data_family$Group.1 <- ordered(data_family$Group.1, levels = c(unique(data$final_tax)[unique(data$final_tax) != "other"], "other"))
+
+data$final_tax <- str_split(str_split(data$Taxa, ";g__", simplify= TRUE)[,2], ";", simplify = TRUE)[,1]
+data$final_tax <- ifelse(data$final_tax == "", "other", data$final_tax)
+data_genus <- aggregate(data[,c(-1, -2)], by = list(data$final_tax), sum)
+
+data_genus[,-1] <- apply(data_genus[,-1], 2, function(x) x/sum(x))
+
+```
+
+###Generating bar plots of all mice fecal samples (Supp Fig 4)
+
+```{r}
+
+temp <- melt(data_family)
+colnames(temp) <- c("Group.1", "sample-ID", "value")
+temp <- merge(temp, metadata, by = "sample-ID", all.y = FALSE)
+temp$BeforeAfterArthritisInd <- ordered(temp$BeforeAfterArthritisInd, levels = c("before_mannan", "after_mannan"))
+temp <- temp[temp$MouseType == "HET",]
+temp <- aggregate(temp[,c(3)], by = list(temp$PatientbeforeafterRA, temp$Group.1, temp$Patient, temp$Patient002086, temp$BeforeAfterArthritisInd), sum)
+
+#svg("/home/deepan/Dropbox/Deepan-Only/UCSD/Zengler Lab/MiscellaneousExpts/RA-Bottini/Ppaer-figures/SuppFig2-relative-beforeafterRA-HET.svg", height = 6, width = 8)
+ggplot(temp, aes(x = Group.3, y = x, fill = Group.2)) + geom_bar(stat = "identity", position = "fill",width = 0.8) + 
+  scale_fill_manual(values = family_cols) +
+  facet_wrap(~Group.5, scales = "free_y" , nrow = 2) +
+   theme(text = element_text(size = 15), axis.text.x = element_text(angle = 90)) + theme_boxp()
+#dev.off()
+
+temp <- melt(data_family)
+colnames(temp) <- c("Group.1", "sample-ID", "value")
+temp <- merge(temp, metadata, by = "sample-ID", all.y = FALSE)
+temp$BeforeAfterArthritisInd <- ordered(temp$BeforeAfterArthritisInd, levels = c("before_mannan", "after_mannan"))
+temp <- temp[temp$MouseType == "WT",]
+temp <- aggregate(temp[,c(3)], by = list(temp$PatientbeforeafterRA, temp$Group.1, temp$Patient, temp$Patient002086, temp$BeforeAfterArthritisInd), sum)
+
+#svg("/home/deepan/Dropbox/Deepan-Only/UCSD/Zengler Lab/MiscellaneousExpts/RA-Bottini/Ppaer-figures/SuppFig2-relative-beforeafterRA-WT.svg", height = 6, width = 8)
+ggplot(temp, aes(x = Group.3, y = x, fill = Group.2)) + geom_bar(stat = "identity", position = "fill",width = 0.8) + 
+  scale_fill_manual(values = family_cols) +
+  facet_wrap(~Group.5, scales = "free_y" , nrow = 2) +
+   theme(text = element_text(size = 15), axis.text.x = element_text(angle = 90)) + theme_boxp()
+#dev.off()
+
+```
+
+###ratio of Bacteroides to Prevotella (Supp Fig 4)
+
+```{r}
+
+temp <- data_genus[str_detect(data_genus$Group.1, "Prevotella|Bacteroides"),]
+temp <- melt(temp)
+colnames(temp)[2] <- "sample-ID"
+
+
+temp <- merge(temp, metadata[, c(1, 4, 12, 13:ncol(metadata))], by = "sample-ID")
+
+temp <- aggregate(temp[, c(3)], by = list(temp$PatientTypebeforeafterRA, temp$Group.1), mean)
+
+#svg("/home/deepan/Dropbox/Deepan-Only/UCSD/Zengler Lab/MiscellaneousExpts/RA-Bottini/Ppaer-figures/MainFig-allsamples-ratio-genusPrevotellatoBacteroides.svg", height = 4, width = 6)
+ggplot(temp, aes(x = Group.1, y = x, fill = Group.2)) + geom_bar(stat = "identity",width = 0.8) + 
+  scale_fill_manual(values = c("Bacteroides"="cyan3", "Prevotella"="coral")) +
+  coord_flip() + 
+  ylim(0,1) +
+   theme_boxp() + theme(text = element_text(size = 15), axis.text.x = element_text(angle = 0), axis.title.y = element_blank(), legend.position = "none")
+#dev.off()
+
+#svg("/home/deepan/Dropbox/Deepan-Only/UCSD/Zengler Lab/MiscellaneousExpts/RA-Bottini/Ppaer-figures/MainFig-allsamples-ratio-genusPrevotellatoBacteroides-inset1.svg", height = 2, width = 3)
+ggplot(temp[str_detect(temp$Group.1, "RA#86"),], aes(x = Group.1, y = x, fill = Group.2)) + geom_bar(stat = "identity",width = 0.8) + 
+  scale_fill_manual(values = c("Bacteroides"="cyan3", "Prevotella"="coral")) +
+  coord_flip() +
+  ylim(NA, 0.001) +
+   theme_boxp() + theme(text = element_text(size = 15), axis.text.x = element_text(angle = 90), axis.title.y = element_blank(), legend.position = "none")
+#dev.off()
+
+#svg("/home/deepan/Dropbox/Deepan-Only/UCSD/Zengler Lab/MiscellaneousExpts/RA-Bottini/Ppaer-figures/MainFig-allsamples-ratio-genusPrevotellatoBacteroides-inset2.svg", height = 2, width = 3)
+ggplot(temp[str_detect(temp$Group.1, "RA#02"),], aes(x = Group.1, y = x, fill = Group.2)) + geom_bar(stat = "identity",width = 0.8) + 
+ scale_fill_manual(values = c("Bacteroides"="cyan3", "Prevotella"="coral")) +
+  coord_flip() +
+  ylim(NA, 0.001) +
+   theme_boxp() + theme(text = element_text(size = 15), axis.text.x = element_text(angle = 90), axis.title.y = element_blank(), legend.position = "none")
+#dev.off()
+
+```
+
+
+
+
+
