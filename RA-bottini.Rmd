@@ -1,0 +1,1962 @@
+---
+title: "RA-Bottini"
+author: "Deepan"
+date: "10/3/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load libraries
+
+```{r, message = FALSE}
+# Packages I commonly use
+# install.packages("stringr")
+# install.packages("ggplot2")
+# install.packages("reshape")
+# install.packages("reshape2")
+# install.packages("gplots")
+# install.packages("FactoMineR")
+# install.packages("factoextra")
+library(stringr)
+library(ggplot2)
+library(FactoMineR)
+library(factoextra)
+library(reshape)
+library(reshape2)
+library(gplots)
+library(RColorBrewer)
+library(dplyr)
+library(ggpubr)
+library (ANCOMBC)
+
+```
+
+```{r}
+reg_eq <- function(x,y) {
+  m <- lm(y ~ x)
+  as.character(
+    as.expression(
+      substitute(italic(y) == a + b %.% italic(x)*","~~italic(r)^2~"="~r2,
+                list(a = format(coef(m)[1], digits = 4),
+                b = format(coef(m)[2], digits = 4),
+                r2 = format(summary(m)$r.squared, digits = 3)))
+    )
+  )
+}
+
+getPalette = colorRampPalette(brewer.pal(12, "Paired"))#colors for barplots
+
+vec_col_ra <- c( "midnightblue", 
+               "darkorange1", "deeppink", "turquoise3", "orange3",  
+               "gold", "hotpink",
+              "blue1",  "green3",  "blue4", 
+             "deeppink3", "orange1", 
+           "forestgreen",  "violetred4", "plum", #"plum3", "plum4",  
+           "yellow3", "green1", "deepskyblue4", 
+           "tomato",  "blue2",  "hotpink3", 
+            "turquoise1", "darkorange3", 
+             "darkslateblue", 
+           "yellow3", "coral", 
+           "seagreen1", "seagreen3", 
+           "grey") #colors for regression plots
+
+```
+
+
+import modified feature table
+```{r}
+table <- read.table("/media/deepan/Deepan/RA_Bottini/igm-storage2.ucsd.edu/220908_M00436_0727_000000000-KLG6T/level-6.csv",
+                     sep=",", 
+                    dec=".", 
+                    header = TRUE, 
+                    stringsAsFactors = FALSE, 
+                    na.strings = NA, 
+                    check.names = FALSE, 
+                    comment.char = ""
+                     )
+
+new_table <- read.table("/media/deepan/Deepan/RA_Bottini/62024-FASTQ/level-6.csv",
+                     sep=",", 
+                    dec=".", 
+                    header = TRUE, 
+                    stringsAsFactors = FALSE, 
+                    na.strings = NA, 
+                    check.names = FALSE, 
+                    comment.char = ""
+                     )
+
+#colnames(table)
+categorical <- c("type","Patient","MouseID","BeforeAfterArthritisInd", "PrimerPlate", "PrevotellaRich", "MouseType","SamplingTime")
+
+categorical_new <- c("samplename","type", "TimepointofSample", "Patient", "MouseID", "BeforeAfterFMT", "BeforeAfterArthritisInd", "MouseType")
+
+
+# swell <- read.table("/media/deepan/Deepan/RA_Bottini/igm-storage2.ucsd.edu/220908_M00436_0727_000000000-KLG6T/joint-swelling.csv",
+#                      sep="\t", 
+#                     dec=".", 
+#                     header = TRUE, 
+#                     stringsAsFactors = FALSE, 
+#                     na.strings = NA, 
+#                     check.names = FALSE, 
+#                     comment.char = ""
+#                      )
+# 
+fecal <- read.table("/media/deepan/Deepan/RA_Bottini/fecal_samples/all_patient-fecaldata-Roxana.tsv",
+                      sep="\t", 
+                     dec=".", 
+                     header = TRUE, 
+                     stringsAsFactors = FALSE, 
+                     na.strings = NA, 
+                     check.names = FALSE, 
+                     comment.char = ""
+                      )
+
+fecal_og <- fecal
+
+```
+
+```{r}
+fecal$genus <- str_split(fecal$`#OTU ID`, "f__", simplify = TRUE)[,2] 
+fecal <- aggregate(fecal[, c(-1, -ncol(fecal))], by = list(fecal$genus), sum)
+fecal$median <- apply(fecal[,-1], 1, median)
+fecal <- fecal[fecal$median > 0.0001,]
+fecal <- fecal[order(fecal$median, decreasing = TRUE),]
+
+other <- sapply(fecal[30:nrow(fecal), c(-1, -ncol(fecal))], sum)
+other <- c("other", other, "0")
+fecal <- fecal[1:29,]
+fecal <- rbind(fecal, other)
+fecal <- fecal [, -ncol(fecal)]
+fecal[,-1] <- sapply(fecal[,-1], as.numeric)
+fecal$Group.1 <- ordered(fecal$Group.1, levels = fecal$Group.1)
+
+
+fecal <- melt(fecal)
+
+fecal$Patient <- paste("RA", str_split(fecal$variable, "\\.", simplify = TRUE)[,3], sep = "")
+
+
+ggplot(fecal, aes(x = Patient, y = value, fill = Group.1)) + geom_bar(stat = "identity", position = "fill") + 
+  scale_fill_manual(values = c(vec_col_ra, "gray", "gray2")) +
+  #scale_fill_manual(values = get_palette("Paired", length(unique(fecal$Group.1)))) +
+   theme(text = element_text(size = 15), axis.text.x = element_text(angle = 90))
+
+```
+
+
+
+```{r}
+
+temp <- melt(new_table[new_table$type == "experiment",])
+
+temp$mouse <- temp$samplename
+temp$mouse <- str_replace(temp$mouse, "a|b|c", "")
+#temp$mouse <- paste(temp$mouse, temp$BeforeAfterFMT, sep = "_")
+
+temp <- aggregate(temp[,c(10)], by = list(temp$mouse, temp$BeforeAfterFMT), function(x) length(unique(x)))
+
+#temp <- temp[!is.na(temp$x),]
+
+ggplot(temp, aes(y=x, x=Group.1)) + 
+    geom_bar(stat="identity", position = "stack") +
+  facet_wrap(~Group.2) + 
+  labs(y = "Unique OTUs",  title = "Before vs After FMT") +
+  theme_boxp()
+```
+
+
+merging the original fecal samples
+```{r}
+# table <- merge(table, fecal, all.x = TRUE, all.y = TRUE)
+# table <- table[,c(1, c(73:80), c(2:72), c(81:ncol(table)))]
+# table[,-1:-9][is.na(table[,-1:-9])] <- 0
+# setdiff(colnames(table), colnames(fecal))[!setdiff(colnames(table), colnames(fecal))%in%categorical] #new taxa not found in the original fecal samples
+```
+
+
+og- checking controls
+
+```{r}
+
+controls <- as.data.frame(t(table[table$type == "control", c(1:72)]))
+colnames(controls) <- controls[1,] 
+controls <- controls[-1,]
+controls[,1:ncol(controls)] <- apply(controls[,1:ncol(controls)], 2, as.numeric)
+controls$median <- apply(controls[,1:ncol(controls)], 1, median)
+controls$taxa <- rownames(controls)
+#controls <- controls[, c(ncol(controls), (ncol(controls)-1))]
+
+controls$genus <- str_split(str_split(rownames(controls), ";", simplify = TRUE)[,6], "__",simplify = TRUE)[,2]
+
+ggplot(melt(controls[1:8,]), aes(fill=genus, y=value, x=variable)) + 
+    geom_bar(stat="identity", position = "fill") +
+    scale_fill_manual(values = get_palette("Paired", length(unique(controls$genus[1:8])))) +
+    #facet_wrap(.~Community, ncol = 9) +
+   theme(text = element_text(size = 15)) +
+  labs(y = "Relative Abundance", title = "Genus level") 
+```
+controls look equal across all the extraction controls. Need to subtract the mean of this from all other samples in og com.
+
+0624 - checking controls. 
+
+controls look good. 
+```{r}
+
+controls_new <- as.data.frame(t(new_table[new_table$type == "control", c(86, 2:85)]))
+colnames(controls_new) <- controls_new[1,] 
+controls_new <- controls_new[-1,]
+controls_new[,1:ncol(controls_new)] <- apply(controls_new[,1:ncol(controls_new)], 2, as.numeric)
+controls_new$median <- apply(controls_new[,1:ncol(controls_new)], 1, median)
+controls_new$taxa <- rownames(controls_new)
+#controls_new <- controls_new[, c(ncol(controls_new), (ncol(controls_new)-1))]
+
+controls_new$genus <- str_split(str_split(rownames(controls_new), ";", simplify = TRUE)[,6], "__",simplify = TRUE)[,2]
+
+ggplot(melt(controls_new[1:8,]), aes(fill=genus, y=value, x=variable)) + 
+    geom_bar(stat="identity", position = "fill") +
+    scale_fill_manual(values = get_palette("Paired", length(unique(controls_new$genus[1:8])))) +
+    #facet_wrap(.~Community, ncol = 9) +
+   theme(text = element_text(size = 15)) +
+  labs(y = "Relative Abundance", title = "Genus level") 
+```
+controls look good. 
+
+
+
+```{r}
+
+table_t <- as.data.frame(t(table[table$type == "experimental", c(1:72)]))
+colnames(table_t) <- table_t[1,] 
+table_t <- table_t[-1,]
+table_t[,1:ncol(table_t)] <- apply(table_t[,1:ncol(table_t)], 2, as.numeric)
+table_t[,1:ncol(table_t)] <- apply(table_t[,1:ncol(table_t)], 2, function(x) ifelse(is.na(x), 0, x))
+
+table_t$taxa <- rownames(table_t)
+table_t$taxa <- ordered(table_t$taxa, levels = controls$taxa)
+table_t <- table_t[order(table_t$taxa),]
+
+table_t[,-ncol(table_t)] <- table_t[, -ncol(table_t)] - c(controls[,3]) #REMOVE EXTRACTION CONTROLS
+table_t[table_t <0] <- 0
+
+table_t_new <- as.data.frame(t(new_table[new_table$type == "experiment" & new_table$BeforeAfterFMT == "after", c(1:85)])) #only looking at the mouse data after FMT.
+colnames(table_t_new) <- table_t_new[1,] 
+table_t_new <- table_t_new[-1,]
+table_t_new[,1:ncol(table_t_new)] <- apply(table_t_new[,1:ncol(table_t_new)], 2, as.numeric)
+
+table_t_new[,1:ncol(table_t_new)] <- apply(table_t_new[,1:ncol(table_t_new)], 2, function(x) ifelse(is.na(x), 0, x))
+
+table_t_new$taxa <- rownames(table_t_new)
+
+final <- merge(table_t, table_t_new, by = "taxa", all = TRUE)
+
+final[is.na(final)] <- 0
+
+final <- final[, !(str_detect(colnames(final), "RA026"))]
+
+
+temp <- final #temperaory df for performing z-score adjustment
+temp[,-1] <- temp[,-1] %>%
+  rowwise() %>%
+  mutate(across(everything(), ~ifelse(abs(. - mean(c_across(everything()))) / sd(c_across(everything())) > 2, 0, .))) #z-score based removal of reads past 2nd standard deviation
+temp$median <- apply(temp[,-1], 1, median)
+temp <- temp[order(temp$median, decreasing = TRUE),] #re-ordering top taxa by median levels of values found across all samples. 
+
+final$taxa <- ordered(final$taxa, levels = c(temp$taxa))
+
+#table_t <- final[order(final$taxa),]
+
+#final[,-1] <- apply(final[,-1], 2, function(x) x/sum(x))
+
+final$median <- apply(final[,-1], 1, median)
+
+final <- final[order(final$median, decreasing = TRUE),]
+
+# final <- final[, c(-(ncol(final)))]
+
+
+ggplot(melt(final[1:30,]), aes(fill=taxa, y=value, x=variable)) +
+  geom_bar(stat="identity", position = "fill") +
+  scale_fill_manual(values = getPalette(length(unique(final[1:30,])))) +
+  #facet_wrap(.~MouseType) +
+ theme(text = element_text(size = 15)) +
+labs(y = "Relative Abundance", title = "Genus level")
+
+```
+merging the categorical
+
+```{r}
+
+cat_new <- new_table[new_table$type == "experiment" & new_table$BeforeAfterFMT == "after", c(86:ncol(new_table))]
+cat_new <- cat_new[,c(-3, -6)]
+
+cat_old <- table[table$type == "experimental" , c(1,73:ncol(table))]
+cat_old <- cat_old[, c(-5, -7, -8)]
+
+colnames(cat_old)[1] <- c("samplename")
+
+cat <- rbind(cat_new, cat_old)
+```
+
+merge the final and cat
+
+```{r}
+
+temp <- melt(final)
+temp <- merge(temp, cat, by.x = "variable", by.y = "samplename")
+
+temp$condition <- paste(temp$Patient, temp$BeforeAfterArthritisInd, sep="_")
+temp$condition <- paste(temp$condition, "RAinduction", sep ="")
+
+ temp$taxa <- ordered(temp$taxa, levels = c(as.character(final$taxa[1:30]), "other"))
+ temp$taxa[temp$taxa %in% final$taxa[31:nrow(final)]] <- "other"
+temp$name <- ifelse(as.character(temp$taxa) != "other", paste("g_", str_split(temp$taxa, ";g__", simplify = TRUE)[,2], sep=""), "other")
+temp$name[temp$name == "g_"] <- "other"
+temp$name[is.na(temp$name)] <- "other"
+
+temp$taxa <- ordered(temp$taxa, levels = c(as.character(final$taxa)))
+
+temp$Patient <- ordered(temp$Patient, levels = unique(temp$Patient))
+temp <- temp[order(temp$Patient),]
+temp$condition <- ordered(temp$condition, levels = unique(temp$condition))
+
+temp <- temp[order(temp$Patient),]
+
+
+#png("/media/deepan/Deepan/RA_Bottini/20240618-relativeabundance-genotype.png", width = 700, height = 600)
+ggplot(temp, aes(fill=name, y=value, x=condition)) + 
+    geom_bar(stat="identity", position = "fill") +
+    #scale_fill_manual(values = getPalette(length(unique(temp$name)))) +
+  #scale_fill_manual(values = get_palette("Paired",length(unique(temp$taxa)))) +  
+  scale_fill_manual(values = c(vec_col_ra[1:18], "gray")) +
+  facet_wrap(.~MouseType) +
+    theme_bp() +
+   theme(text = element_text(size = 15), axis.text.x = element_text(angle = 90)) +
+  labs(y = "Relative Abundance", title = "Effect of Genotype") 
+#dev.off()
+
+ggplot(temp, aes(fill=name, y=value, x=Patient)) + 
+    geom_bar(stat="identity", position = "fill") +
+    scale_fill_manual(values = getPalette(length(unique(temp$name)))) +
+    facet_wrap(.~BeforeAfterArthritisInd) +
+   theme(text = element_text(size = 15)) +
+  labs(y = "Relative Abundance", title = "Genus level") 
+
+```
+
+
+looking for taxa common between og fecal samples and data- very few!! 
+
+```{r}
+# 
+# final[,c(-1, -127)] <- apply(final[,c(-1, -127)], 2, function(x) x/sum(x))
+# fecal_og$median <- apply(fecal_og[,-1],1, function(x) median(x))
+# 
+# fecal_og <- fecal_og[order(fecal_og$median, decreasing = TRUE),]
+# 
+# fecal_og$common <- ifelse(fecal_og$`#OTU ID` %in% c(final$taxa), fecal_og$`#OTU ID`, "no")
+# 
+# all <- merge(fecal_og[, !colnames(fecal_og) %in% c("median", "common")], final[,-ncol(final)], by.x = "#OTU ID", by.y = "taxa")
+# 
+# all$genus <- str_split(all$`#OTU ID`, "f__", simplify = TRUE)[,2] 
+# all <- aggregate(all[,c(-1, -ncol(all))], by = list(all$genus), sum)
+# all$median <- apply(all[,-1],1, function(x) median(x))
+# all <- all[order(all$median, decreasing = TRUE),]
+
+```
+
+
+
+```{r, fig.height=8, fig.width=12}
+for_pca <- as.data.frame(t(final))
+colnames(for_pca) <- for_pca[1,]
+for_pca <- for_pca[-1,]
+for_pca[,1:ncol(for_pca)] <- apply(for_pca[,1:ncol(for_pca)], 2, as.numeric)
+for_pca <- log(for_pca + 0.00000001)
+
+for_pca$samplename <- rownames(for_pca)
+for_pca <- merge(for_pca, cat, by = "samplename")
+for_pca$Patient_beforeafterRA <- paste(for_pca$Patient, for_pca$BeforeAfterArthritisInd, sep = "_")
+
+pca <- PCA(for_pca, 
+           scale = FALSE, 
+           quali.sup = c(1, (ncol(for_pca)-5):ncol(for_pca))
+           )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca) -4
+             )
+
+#svg("/media/deepan/Deepan/RA_Bottini/20240618-PatientPCA.svg", width = 5, height = 5)
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-3,
+             geom = c("point")
+             )
+#dev.off()
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-2
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-1
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca),
+             geom = c("point"),
+             ggtheme = theme_pca(),
+             pointsize = 3,
+             mean.point = FALSE
+             )
+
+fviz_pca_ind( PCA(for_pca[for_pca$MouseType == "HET",], 
+           scale = FALSE, 
+           quali.sup = c(1, (ncol(for_pca)-5):ncol(for_pca))
+           ), 
+             repel = TRUE, 
+             habillage = ncol(for_pca),
+             geom = c("point"),
+             ggtheme = theme_pca(),
+             pointsize = 3,
+             mean.point = FALSE
+             )
+
+fviz_pca_biplot(pca, 
+                habillage = ncol(for_pca)-3,
+                addEllipses = TRUE,
+                repel = TRUE)
+
+
+
+```
+
+can look at permanova effect of arthritis induction on separation of samples.? could see whether exporting to qiime could help. 
+
+-----------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+no extraction controls even passsed the deblur filters, so looking good. Can proceed directly with the experiment samples. 
+
+```{r}
+
+table_t_new <- as.data.frame(t(new_table[new_table$type == "experiment" & new_table$BeforeAfterFMT == "after", c(1:85)])) #only looking at the mouse data after FMT.
+colnames(table_t_new) <- table_t_new[1,] 
+table_t_new <- table_t_new[-1,]
+table_t_new[,1:ncol(table_t_new)] <- apply(table_t_new[,1:ncol(table_t_new)], 2, as.numeric)
+
+table_t_new[,1:ncol(table_t_new)] <- apply(table_t_new[,1:ncol(table_t_new)], 2, function(x) ifelse(is.na(x), 0, x))
+
+table_t_new$taxa <- rownames(table_t_new)
+
+
+
+
+
+
+temp <- table_t_new #temperaory df for performing z-score adjustment
+temp[,-1] <- temp[,-1] %>%
+  rowwise() %>%
+  mutate(across(everything(), ~ifelse(abs(. - mean(c_across(everything()))) / sd(c_across(everything())) > 2, 0, .))) #z-score based removal of reads past 2nd standard deviation
+temp$median <- apply(temp[,-1], 1, median)
+temp <- temp[order(temp$median, decreasing = TRUE),] #re-ordering top taxa by median levels of values found across all samples. 
+
+temp$taxa <- rownames(temp)
+table_t_new$taxa <- rownames(table_t_new)
+
+table_t_new$taxa <- ordered(table_t_new$taxa, levels = c(temp$taxa))
+
+table_t_new <- table_t_new[order(table_t_new$taxa),]
+###3
+table_t_new$genus <- str_split(str_split(rownames(table_t_new), ";", simplify = TRUE)[,6], "__",simplify = TRUE)[,2]
+
+table_t_new$genus[9:nrow(table_t_new)] <- "other"
+
+table_t_new$genus <- ordered(table_t_new$genus, levels = c(table_t_new$genus[1:8], "other"))
+
+table_t_new <- aggregate(table_t_new[,c(-(ncol(table_t_new)-1), -ncol(table_t_new))], by = list(table_t_new$genus), sum)
+
+table_t_new[,-1] <- apply(table_t_new[,-1], 2, function(x) x/sum(x))
+
+temp <- new_table[new_table$type == "experiment" & new_table$BeforeAfterFMT == "after", c(86:ncol(new_table))]
+
+temp <- merge(melt(table_t_new), temp, by.x = "variable", by.y = "samplename")
+temp$condition <- paste(temp$Patient, temp$BeforeAfterArthritisInd, sep="_")
+
+ggplot(temp, aes(fill=Group.1, y=value, x=condition)) + 
+    geom_bar(stat="identity", position = "fill") +
+    scale_fill_manual(values = getPalette(length(unique(table_t_new$Group.1)))) +
+    facet_wrap(.~MouseType) +
+   theme(text = element_text(size = 15)) +
+  labs(y = "Relative Abundance", title = "Genus level") 
+
+```
+
+
+
+
+making different levels of taxonomy ranking
+```{r}
+table_t <- as.data.frame(t(table))
+colnames(table_t) <- table_t[1,] 
+table_t <- table_t[-1,]
+table_t$genus <- str_split(str_split(rownames(table_t), ";", simplify = TRUE)[,6], "__",simplify = TRUE)[,2]
+table_t$family <- str_split(str_split(rownames(table_t), ";", simplify = TRUE)[,5], "__",simplify = TRUE)[,2]
+table_t$order <- str_split(str_split(rownames(table_t), ";", simplify = TRUE)[,4], "__",simplify = TRUE)[,2]
+table_t$class <- str_split(str_split(rownames(table_t), ";", simplify = TRUE)[,3], "__",simplify = TRUE)[,2]
+table_t <- table_t[9:nrow(table_t), ]
+
+table_t[table_t$genus == "","genus"] <- paste("f", table_t[table_t$genus == "","family"], sep = "_")
+table_t[table_t$genus == "f_","genus"] <- paste("o", table_t[table_t$genus == "f_","order"], sep = "_")
+
+table_t[,1:125] <- as.data.frame(lapply(table_t[,1:125], as.numeric))
+```
+
+
+removing fecal_samples_only stuff since those were done in a different run and the values are all normalized already
+
+```{r}
+table_t_fecal <- table_t[colnames(table_t)%in%c(fecal$index, "genus", "family", "class", "order")]
+table_t <- table_t[!colnames(table_t)%in%fecal$index]
+```
+
+
+making different dfs for different aggregates
+```{r}
+
+genus <- aggregate(table_t[,1:125], by = list(table_t$genus), FUN = sum, na.rm = TRUE)
+#genus[1,][genus$Group.1 == "",1] <- "other"
+
+family <- aggregate(table_t[,1:125], by = list(table_t$family), FUN = sum, na.rm = TRUE)
+family[1,][family$Group.1 == "",1] <- "other"
+
+order <- aggregate(table_t[,1:125], by = list(table_t$order), FUN = sum, na.rm = TRUE)
+order[1,][order$Group.1 == "",1] <- "other"
+
+class <- aggregate(table_t[,1:125], by = list(table_t$class), FUN = sum, na.rm = TRUE)
+class[1,][class$Group.1 == "",1] <- "other"
+
+```
+
+
+
+subtract extr.controls from all aggregated dfs
+```{r}
+control <- apply(genus[,str_detect(colnames(genus),"Ext")], 1, function(x) mean(x))
+genus[,2:ncol(genus)] <- apply(genus[,2:ncol(genus)], 2, function (x) x - control)
+genus <- genus[,!str_detect(colnames(genus),"Ext|Zym")]
+genus[,2:ncol(genus)][genus[,2:ncol(genus)] < 0] <- 0
+genus[,2:ncol(genus)] <- as.data.frame(apply(genus[,2:ncol(genus)], 2, function(x) x/sum(x)))
+genus <- genus[,!apply(is.na(genus), 2, all)] #cool way to get rid of columns that are all NA or NaN. In this case, removing samples that have no positive reads for any taxa left after subtracting extraction and sequencing controls. 
+genus <- merge(genus, aggregate(table_t_fecal[,1:5], by = list(table_t_fecal$genus), FUN = sum, na.rm = TRUE))#bringing back the fecal samples
+genus$mean <- apply(genus[,2:ncol(genus)], 1, function(x) mean(x))
+genus <- genus[order(genus$mean, decreasing = TRUE),]
+genus$top <- ifelse(genus$Group.1 %in% genus$Group.1[16:nrow(genus)], "other", genus$Group.1) #CHANGE HERE FOR "OTHER"
+genus <- genus[,!colnames(genus)%in%c("mean")]
+
+control <- apply(family[,str_detect(colnames(family),"Ext")], 1, function(x) mean(x))
+family[,2:ncol(family)] <- apply(family[,2:ncol(family)], 2, function (x) x - control)
+family <- family[,!str_detect(colnames(family),"Ext|Zym")]
+family[,2:ncol(family)][family[,2:ncol(family)] < 0] <- 0
+family[,2:ncol(family)] <- as.data.frame(apply(family[,2:ncol(family)], 2, function(x) x/sum(x)))
+family <- family[,!apply(is.na(family), 2, all)]
+family <- merge(family, aggregate(table_t_fecal[,1:4], by = list(table_t_fecal$family), FUN = sum, na.rm = TRUE))
+family$mean <- apply(family[,2:ncol(family)], 1, function(x) mean(x))
+family <- family[order(family$mean, decreasing = TRUE),]
+family$top <- ifelse(family$Group.1 %in% family$Group.1[15:nrow(family)], "other", family$Group.1)
+family <- family[,!colnames(family)%in%c("mean")]
+
+control <- apply(order[,str_detect(colnames(order),"Ext")], 1, function(x) mean(x))
+order[,2:ncol(order)] <- apply(order[,2:ncol(order)], 2, function (x) x - control)
+order <- order[,!str_detect(colnames(order),"Ext|Zym")]
+order[,2:ncol(order)][order[,2:ncol(order)] < 0] <- 0
+order[,2:ncol(order)] <- as.data.frame(apply(order[,2:ncol(order)], 2, function(x) x/sum(x)))
+order <- order[,!apply(is.na(order), 2, all)]
+order <- merge(order, aggregate(table_t_fecal[,1:4], by = list(table_t_fecal$order), FUN = sum, na.rm = TRUE))
+order$mean <- apply(order[,2:ncol(order)], 1, function(x) mean(x))
+order <- order[order(order$mean, decreasing = TRUE),]
+order$top <- ifelse(order$Group.1 %in% order$Group.1[7:nrow(order)], "other", order$Group.1)
+order <- order[,!colnames(order)%in%c("mean")]
+
+control <- apply(class[,str_detect(colnames(class),"Ext")], 1, function(x) mean(x))
+class[,2:ncol(class)] <- apply(class[,2:ncol(class)], 2, function (x) x - control)
+class <- class[,!str_detect(colnames(class),"Ext|Zym")]
+class[,2:ncol(class)][class[,2:ncol(class)] < 0] <- 0
+class[,2:ncol(class)] <- as.data.frame(apply(class[,2:ncol(class)], 2, function(x) x/sum(x)))
+class <- class[,!apply(is.na(class), 2, all)]
+class <- merge(class, aggregate(table_t_fecal[,1:4], by = list(table_t_fecal$class), FUN = sum, na.rm = TRUE))
+class$mean <- apply(class[,2:ncol(class)], 1, function(x) mean(x))
+class <- class[order(class$mean, decreasing = TRUE),]
+class$top <- ifelse(class$Group.1 %in% class$Group.1[5:nrow(class)], "other", class$Group.1)
+class <- class[,!colnames(class)%in%c("mean")]
+
+```
+
+
+obtaining mouse genotype info
+```{r}
+genotype <- table[colnames(table)%in%c("index", "MouseID", "MouseType")]
+colnames(genotype)[1] <- "Sample"
+```
+
+
+
+melting aggregate dfs
+```{r}
+data_plots_g <- reshape::melt(genus[,2:ncol(genus)])
+colnames(data_plots_g) <- c("Taxon", "Sample", "count")
+data_plots_g$Patient <- str_split(data_plots_g$Sample,"-", simplify = TRUE)[,2]
+data_plots_g$MouseID <- str_split(data_plots_g$Sample,"-", simplify = TRUE)[,3]
+data_plots_g$SamplingTime <- str_split(data_plots_g$Sample,"-", simplify = TRUE)[,4]
+data_plots_g$SamplingTime[data_plots_g$SamplingTime == "2"] <- "BeforeRAinduction"
+data_plots_g$SamplingTime[data_plots_g$SamplingTime == "3"] <- "AfterRAinduction"
+data_plots_g$SamplingTime[data_plots_g$SamplingTime == ""] <- "OriginalSample"
+data_plots_g$PrevotellaEnriched <- str_split(data_plots_g$Sample,"-", simplify = TRUE)[,2]
+data_plots_g$PrevotellaEnriched[str_detect(data_plots_g$PrevotellaEnriched,"RA026|RA068")] <- "Prevotella-Rich"
+data_plots_g$PrevotellaEnriched[!str_detect(data_plots_g$PrevotellaEnriched,"Prevotella-Rich")] <- "Prevotella-Poor"
+data_plots_g$Patient_SamplTime <- paste(data_plots_g$Patient, data_plots_g$SamplingTime, sep = "-")
+data_plots_g$Prev_SampleTime <- paste(data_plots_g$PrevotellaEnriched, data_plots_g$SamplingTime, sep = "-")
+data_plots_g <- merge(data_plots_g, genotype[,c(1,3)], by = "Sample", all.x = TRUE)
+data_plots_g$Taxon <- ordered(data_plots_g$Taxon, levels = c(unique(data_plots_g$Taxon[data_plots_g$Taxon!="other"]) , "other"))
+
+data_plots_f <- reshape::melt(family[,2:ncol(family)])
+colnames(data_plots_f) <- c("Taxon", "Sample", "count")
+data_plots_f$Patient <- str_split(data_plots_f$Sample,"-", simplify = TRUE)[,2]
+data_plots_f$MouseID <- str_split(data_plots_f$Sample,"-", simplify = TRUE)[,3]
+data_plots_f$SamplingTime <- str_split(data_plots_f$Sample,"-", simplify = TRUE)[,4]
+data_plots_f$SamplingTime[data_plots_f$SamplingTime == "2"] <- "BeforeRAinduction"
+data_plots_f$SamplingTime[data_plots_f$SamplingTime == "3"] <- "AfterRAinduction"
+data_plots_f$SamplingTime[data_plots_f$SamplingTime == ""] <- "OriginalSample"
+data_plots_f$PrevotellaEnriched <- str_split(data_plots_f$Sample,"-", simplify = TRUE)[,2]
+data_plots_f$PrevotellaEnriched[str_detect(data_plots_f$PrevotellaEnriched,"RA026|RA068")] <- "Prevotella-Rich"
+data_plots_f$PrevotellaEnriched[!str_detect(data_plots_f$PrevotellaEnriched,"Prevotella-Rich")] <- "Prevotella-Poor"
+data_plots_f$Patient_SamplTime <- paste(data_plots_f$Patient, data_plots_f$SamplingTime, sep = "-")
+data_plots_f$Prev_SampleTime <- paste(data_plots_f$PrevotellaEnriched, data_plots_f$SamplingTime, sep = "-")
+data_plots_f <- merge(data_plots_f, genotype[,c(1,3)], by = "Sample", all.x = TRUE)
+data_plots_f$Taxon <- ordered(data_plots_f$Taxon, levels = c(unique(data_plots_f$Taxon[data_plots_f$Taxon!="other"]) , "other"))
+
+data_plots_o <- reshape::melt(order[,2:ncol(order)])
+colnames(data_plots_o) <- c("Taxon", "Sample", "count")
+data_plots_o$Patient <- str_split(data_plots_o$Sample,"-", simplify = TRUE)[,2]
+data_plots_o$MouseID <- str_split(data_plots_o$Sample,"-", simplify = TRUE)[,3]
+data_plots_o$SamplingTime <- str_split(data_plots_o$Sample,"-", simplify = TRUE)[,4]
+data_plots_o$SamplingTime[data_plots_o$SamplingTime == "2"] <- "BeforeRAinduction"
+data_plots_o$SamplingTime[data_plots_o$SamplingTime == "3"] <- "AfterRAinduction"
+data_plots_o$SamplingTime[data_plots_o$SamplingTime == ""] <- "OriginalSample"
+data_plots_o$PrevotellaEnriched <- str_split(data_plots_o$Sample,"-", simplify = TRUE)[,2]
+data_plots_o$PrevotellaEnriched[str_detect(data_plots_o$PrevotellaEnriched,"RA026|RA068")] <- "Prevotella-Rich"
+data_plots_o$PrevotellaEnriched[!str_detect(data_plots_o$PrevotellaEnriched,"Prevotella-Rich")] <- "Prevotella-Poor"
+data_plots_o$Patient_SamplTime <- paste(data_plots_o$Patient, data_plots_o$SamplingTime, sep = "-")
+data_plots_o$Prev_SampleTime <- paste(data_plots_o$PrevotellaEnriched, data_plots_o$SamplingTime, sep = "-")
+data_plots_o <- merge(data_plots_o, genotype[,c(1,3)], by = "Sample", all.x = TRUE)
+data_plots_o$Taxon <- ordered(data_plots_o$Taxon, levels = c(unique(data_plots_o$Taxon[data_plots_o$Taxon!="other"]) , "other"))
+
+data_plots_c <- reshape::melt(class[,2:ncol(class)])
+colnames(data_plots_c) <- c("Taxon", "Sample", "count")
+data_plots_c$Patient <- str_split(data_plots_c$Sample,"-", simplify = TRUE)[,2]
+data_plots_c$MouseID <- str_split(data_plots_c$Sample,"-", simplify = TRUE)[,3]
+data_plots_c$SamplingTime <- str_split(data_plots_c$Sample,"-", simplify = TRUE)[,4]
+data_plots_c$SamplingTime[data_plots_c$SamplingTime == "2"] <- "BeforeRAinduction"
+data_plots_c$SamplingTime[data_plots_c$SamplingTime == "3"] <- "AfterRAinduction"
+data_plots_c$SamplingTime[data_plots_c$SamplingTime == ""] <- "OriginalSample"
+data_plots_c$PrevotellaEnriched <- str_split(data_plots_c$Sample,"-", simplify = TRUE)[,2]
+data_plots_c$PrevotellaEnriched[str_detect(data_plots_c$PrevotellaEnriched,"RA026|RA068")] <- "Prevotella-Rich"
+data_plots_c$PrevotellaEnriched[!str_detect(data_plots_c$PrevotellaEnriched,"Prevotella-Rich")] <- "Prevotella-Poor"
+data_plots_c$Patient_SamplTime <- paste(data_plots_c$Patient, data_plots_c$SamplingTime, sep = "-")
+data_plots_c$Prev_SampleTime <- paste(data_plots_c$PrevotellaEnriched, data_plots_c$SamplingTime, sep = "-")
+data_plots_c <- merge(data_plots_c, genotype[,c(1,3)], by = "Sample", all.x = TRUE)
+data_plots_c$Taxon <- ordered(data_plots_c$Taxon, levels = c(unique(data_plots_c$Taxon[data_plots_c$Taxon!="other"]) , "other"))
+```
+
+
+
+
+plotting by pateints
+
+
+```{r, fig.height=8, fig.width=12}
+ggplot(data_plots_g, aes(fill=Taxon, y=count, x=Patient)) + 
+    geom_bar(stat="identity", position = "fill") +
+    scale_fill_manual(values = getPalette(length(unique(data_plots_g$Taxon)))) +
+    #facet_wrap(.~Community, ncol = 9) +
+   theme(text = element_text(size = 15)) +
+  labs(y = "Relative Abundance", title = "Genus level") 
+
+ggplot(data_plots_g[!is.na(data_plots_g$MouseType),], aes(fill=Taxon , y=count, x=Patient_SamplTime)) +
+    geom_bar(stat="identity", position = "fill") +
+    scale_fill_manual(values = getPalette(length(unique(data_plots_g$Taxon)))) +
+    facet_wrap(.~MouseType, ncol = 2) +
+   theme(text = element_text(size = 15), axis.text.x = element_text(angle = 90)) +
+  labs(y = "Relative Abundance", title = "Genus level")
+
+ggplot(data_plots_g[is.na(data_plots_g$MouseType),], aes(fill=Taxon , y=count, x=Patient_SamplTime)) +
+    geom_bar(stat="identity", position = "fill") +
+    scale_fill_manual(values = getPalette(length(unique(data_plots_g$Taxon)))) +
+    #facet_wrap(.~MouseType, ncol = 2) +
+   theme(text = element_text(size = 15), axis.text.x = element_text(angle = 90)) +
+  labs(y = "Relative Abundance", title = "Genus level")
+
+ggplot(data_plots_g, aes(fill=Taxon, y=count, x=Sample)) + 
+    geom_bar(stat="identity", position = "fill") +
+    scale_fill_manual(values = getPalette(length(unique(data_plots_g$Taxon)))) +
+    #facet_wrap(.~Community, ncol = 9) +
+   theme(text = element_text(size = 15)) +
+  labs(y = "Relative Abundance", title = "Genus level") 
+
+ggplot(data_plots_f, aes(fill=Taxon, y=count, x=Patient)) + 
+    geom_bar(stat="identity", position = "fill") +
+    scale_fill_manual(values = getPalette(length(unique(data_plots_f$Taxon)))) +
+    #facet_wrap(.~Community, ncol = 9) +
+   theme(text = element_text(size = 15)) +
+  labs(y = "Relative Abundance", title = "Family  level") 
+
+ggplot(data_plots_o, aes(fill=Taxon, y=count, x=Patient)) + 
+    geom_bar(stat="identity", position = "fill") +
+    scale_fill_manual(values = getPalette(length(unique(data_plots_o$Taxon)))) +
+    #facet_wrap(.~Community, ncol = 9) +
+   theme(text = element_text(size = 15)) +
+  labs(y = "Relative Abundance", title = "Order level") 
+
+ggplot(data_plots_c, aes(fill=Taxon, y=count, x=Patient)) + 
+    geom_bar(stat="identity", position = "fill") +
+    scale_fill_manual(values = getPalette(length(unique(data_plots_c$Taxon)))) +
+    #facet_wrap(.~Community, ncol = 9) +
+   theme(text = element_text(size = 15)) +
+  labs(y = "Relative Abundance", title = "Class level") 
+```
+
+
+
+
+```{r}
+test <- as.data.frame(t(genus[,c(-1, -ncol(genus))]))
+colnames(test) <- genus[,ncol(genus)]
+test$Sample <- rownames(test)
+test <- merge(test, table[,c(1,3,6,9,4)], by.x = "Sample", by.y = "index")
+test$Patient <- str_split(test$Sample, "-", simplify = TRUE)[,2]
+test$BeforeAfterArthritisInd <- ifelse(is.na(test$BeforeAfterArthritisInd), "OriginalSample", test$BeforeAfterArthritisInd)
+test$PatIDSam <- paste(test$Patient, test$MouseID, test$BeforeAfterArthritisInd, sep = "-")
+names <- colnames(test)[2:(ncol(test)-5)]
+test <-  as.data.frame(t(aggregate(test[,c(2:(ncol(test)-5))], by = list(test$PatIDSam), FUN = mean)))
+colnames(test) <- test[1,]
+test <- test[-1,]
+test$Top <- names
+test$Taxon <- genus$Group.1
+test <- test[,c(122,123, 1:121)]
+test[,3:ncol(test)] <- as.data.frame(lapply(test[,3:ncol(test)], as.numeric))
+test$Top <- ordered(test$Top, levels = c(unique(test$Top[test$Top!="other"]) , "other"))
+```
+
+
+
+```{r}
+test <- test[,!str_detect(colnames(test), "-NA-Original")]
+test <- test[,!colnames(test)%in%c("RA032-265-before", "RA032-267-before", "RA032-268-before", "RA032-269-before", "RA032-296-before", "RA032-297-before", "RA032-298-before")] #samples missing
+
+##test to see that all alternate columns are the same mouseID, just before and after sample
+
+#colnames(test) <- paste(str_split(colnames(test), "-", simplify = TRUE)[,1], str_split(colnames(test), "-", simplify = TRUE)[,2], sep = "-") 
+#rbind(test[seq(3, ncol(test),2)], test[seq(4, ncol(test),2)])  
+
+test_diff <- test[seq(3, ncol(test),2)] - test[seq(4, ncol(test),2)]
+colnames(test_diff) <- paste(str_split(colnames(test_diff), "-", simplify = TRUE)[,1], str_split(colnames(test_diff), "-", simplify = TRUE)[,2], sep = "-")
+test_diff$Taxon <- test$Taxon
+test_diff$Top <- test$Top
+test_diff <- test_diff[,c(56, 57, c(1:55))] #for PCA
+```
+
+
+#remaking averaged HET and WT plots for regression plots, though this may not be the best method since the PCA later shows clear clustering by mouse IDs than by genotype...
+```{r}
+
+test <- as.data.frame(t(genus[,c(-1, -ncol(genus))]))
+colnames(test) <- genus[,ncol(genus)]
+test$Sample <- rownames(test)
+test <- merge(test, table[,c(1,3,6,9)], by.x = "Sample", by.y = "index")
+test$Patient <- str_split(test$Sample, "-", simplify = TRUE)[,2]
+test$BeforeAfterArthritisInd <- ifelse(is.na(test$BeforeAfterArthritisInd), "OriginalSample", test$BeforeAfterArthritisInd)
+test$PatTypSam <- paste(test$Patient, test$MouseType, test$BeforeAfterArthritisInd, sep = "-")
+names <- colnames(test)[2:(ncol(test)-4)]
+test <-  as.data.frame(t(aggregate(test[,c(2:(ncol(test)-4))], by = list(test$PatTypSam), FUN = mean)))
+colnames(test) <- test[1,]
+test <- test[-1,]
+test$Top <- names
+test$Taxon <- genus$Group.1
+test <- test[,c(26,27, 1:25)]
+test[,3:ncol(test)] <- as.data.frame(lapply(test[,3:ncol(test)], as.numeric))
+test$Top <- ordered(test$Top, levels = c(unique(test$Top[test$Top!="other"]) , "other"))
+
+test <- test[,!str_detect(colnames(test), "NA")]
+```
+
+
+
+
+Changes in specific taxa pre and post manan induction (HET and WT mice averaged)
+
+
+```{r}
+# data_plots_g$PatTypSamTim <- paste(data_plots_g$Patient, data_plots_g$MouseType, data_plots_g$SamplingTime, sep = "_")
+# 
+# test <- aggregate(data_plots_g[,c(3)], by = list(data_plots_g$PatTypSamTim, data_plots_g$Taxon), FUN = mean)
+# colnames(test) <- c("PatTypSamTim", "Taxon", "x")
+# test <- reshape(test, v.names = "x", idvar = "Taxon", timevar = "PatTypSamTim", direction = "wide")
+ 
+       
+ggplot(test, aes(color=Top, y= `RA011-HET-after`, x = `RA011-HET-before`)) +
+  geom_smooth(data = test, method='lm', level = 0.99, fill = "grey", color = "grey") +
+  geom_point(size = 2.5) +
+  scale_x_sqrt() +
+  scale_y_sqrt() +
+  #scale_color_manual(values = getPalette(length(unique(test$Top)))) +
+  scale_color_manual(values = vec_col0) +
+  labs(title = "RA011_HET") 
+
+ggplot(test, aes(color=Top, y=`RA011-WT-after`, x = `RA011-WT-before`)) +
+  geom_smooth(data = test, method='lm', level = 0.99, fill = "grey", color = "grey") +
+  geom_point(size = 2.5) +
+  scale_x_sqrt() +
+  scale_y_sqrt() +
+  #scale_color_manual(values = getPalette(nrow(test))) +
+  scale_color_manual(values = vec_col0) +
+  labs(title = "RA011_WT") 
+
+ggplot(test, aes(color=Top, y=`RA026-HET-after`, x = `RA026-HET-before`)) +
+  geom_smooth(data = test, method='lm', level = 0.99, fill = "grey", color = "grey") +
+  geom_point(size = 2.5) +
+  scale_x_sqrt() +
+  scale_y_sqrt() +
+  #scale_color_manual(values = getPalette(nrow(test))) +
+  scale_color_manual(values = vec_col0) +
+  labs(title = "RA026_HET")
+
+ggplot(test, aes(color=Top, y=`RA026-WT-after`, x = `RA026-WT-before`)) +
+  geom_smooth(data = test, method='lm', level = 0.99, fill = "grey", color = "grey") +
+  geom_point(size = 2.5) +
+  scale_x_sqrt() +
+  scale_y_sqrt() +
+  #scale_color_manual(values = getPalette(nrow(test))) +
+  scale_color_manual(values = vec_col0) +
+  labs(title = "RA026_WT")
+
+ggplot(test, aes(color=Top, y=`RA032-HET-after`, x = `RA032-HET-before`)) +
+  geom_smooth(data = test, method='lm', level = 0.99, fill = "grey", color = "grey") +
+  geom_point(size = 2.5) +
+  scale_x_sqrt() +
+  scale_y_sqrt() +
+  #scale_color_manual(values = getPalette(nrow(test))) +
+  scale_color_manual(values = vec_col0) +
+  labs(title = "RA032_HET")
+  
+ggplot(test, aes(color=Top, y=`RA032-WT-after`, x = `RA032-WT-before`)) +
+  geom_smooth(data = test, method='lm', level = 0.99, fill = "grey", color = "grey") +
+  geom_point(size = 2.5) +
+  scale_x_sqrt() +
+  scale_y_sqrt() +
+  #scale_color_manual(values = getPalette(nrow(test))) +
+  scale_color_manual(values = vec_col0) +
+  labs(title = "RA032_WT")
+
+ggplot(test, aes(color=Top, y=`RA068-HET-after`, x = `RA068-HET-before`)) +
+  geom_smooth(data = test, method='lm', level = 0.99, fill = "grey", color = "grey") +
+  geom_point(size = 2.5) +
+  scale_x_sqrt() +
+  scale_y_sqrt() +
+  #scale_color_manual(values = getPalette(nrow(test))) +
+  scale_color_manual(values = vec_col0) +
+  labs(title = "RA068_HET")
+
+ggplot(test, aes(color=Top, y=`RA068-WT-after`, x = `RA068-WT-before`)) +
+  geom_smooth(data = test, method='lm', level = 0.99, fill = "grey", color = "grey") +
+  geom_point(size = 2.5) +
+  scale_x_sqrt() +
+  scale_y_sqrt() +
+  #scale_color_manual(values = getPalette(nrow(test))) +
+  scale_color_manual(values = vec_col0) +
+  labs(title = "RA068_WT")
+
+ggplot(test, aes(color=Top, y=`RA074-HET-after`, x = `RA074-HET-before`)) +
+  geom_smooth(data = test, method='lm', level = 0.99, fill = "grey", color = "grey") +
+  geom_point(size = 2.5) +
+  scale_x_sqrt() +
+  scale_y_sqrt() +
+  #scale_color_manual(values = getPalette(nrow(test))) +
+  scale_color_manual(values = vec_col0) +
+  labs(title = "RA074_HET")
+
+ggplot(test, aes(color=Top, y=`RA074-WT-after`, x = `RA074-WT-before`)) +
+  geom_smooth(data = test, method='lm', level = 0.99, fill = "grey", color = "grey") +
+  geom_point(size = 2.5) +
+  scale_x_sqrt() +
+  scale_y_sqrt() +
+  #scale_color_manual(values = getPalette(length(unique(test$Top)))) +
+  scale_color_manual(values = vec_col0) +
+  labs(title = "RA074_WT")
+```
+
+
+
+
+
+
+```{r}
+test$RA011_het <- test[,3] - test[,4]
+test$RA011_wt <- test[,5] - test[,6]
+test$RA026_het <- test[,7] - test[,8]
+test$RA026_wt <- test[,9] - test[,10]
+test$RA032_het <- test[,11] - test[,12]
+test$RA032_wt <- test[,13] - test[,14]
+test$RA068_het <- test[,15] - test[,16]
+test$RA068_wt <- test[,17] - test[,18]
+test$RA074_het <- test[,19] - test[,20]
+test$RA074_wt <- test[,21] - test[,22]
+```
+
+Het vs WT changes in microbiome post manan administraion (HET and WT mice averaged)
+
+
+
+```{r}
+ggplot(test, aes(color=Top, y=RA011_het, x = RA011_wt)) +
+  geom_smooth(data = test, method='lm', level = 0.99, fill = "grey", color = "grey") +
+  geom_point(size = 2.5) +
+  #scale_color_manual(values = getPalette(nrow(test))) +
+  scale_color_manual(values = vec_col0)
+  labs(title = "RA011", x = "WT change in relative abundance after RA induction", y = "HET change in relative abundance after RA induction") 
+
+
+ggplot(test, aes(color=Top, y=RA026_het, x = RA026_wt)) +
+  geom_smooth(data = test, method='lm', level = 0.99, fill = "grey", color = "grey") +
+  geom_point(size = 2.5) +
+  # scale_x_sqrt() +
+  # scale_y_sqrt() +
+  #scale_color_manual(values = getPalette(nrow(test))) +
+  scale_color_manual(values = vec_col0)
+  labs(title = "RA026", x = "WT change in relative abundance after RA induction", y = "HET change in relative abundance after RA induction")
+
+ggplot(test, aes(color=Top, y=RA032_het, x = RA032_wt)) +
+  geom_smooth(data = test, method='lm', level = 0.99, fill = "grey", color = "grey") +
+  geom_point(size = 2.5) +
+  # scale_x_sqrt() +
+  # scale_y_sqrt() +
+  #scale_color_manual(values = getPalette(nrow(test))) +
+  scale_color_manual(values = vec_col0)
+  labs(title = "RA032", x = "WT change in relative abundance after RA induction", y = "HET change in relative abundance after RA induction")
+  
+
+ggplot(test, aes(color=Top, y=RA068_het, x = RA068_wt)) +
+  geom_smooth(data = test, method='lm', level = 0.99, fill = "grey", color = "grey") +
+  geom_point(size = 2.5) +
+  # scale_x_sqrt() +
+  # scale_y_sqrt() +
+  #scale_color_manual(values = getPalette(nrow(test))) +
+  scale_color_manual(values = vec_col0)
+  labs(title = "RA068", x = "WT change in relative abundance after RA induction", y = "HET change in relative abundance after RA induction")
+
+  ggplot(test, aes(color=Top, y=RA074_het, x = RA074_wt)) +
+  geom_smooth(data = test, method='lm', level = 0.99, fill = "grey", color = "grey") +
+  geom_point(size = 2.5) +
+  # scale_x_sqrt() +
+  # scale_y_sqrt() +
+  #scale_color_manual(values = getPalette(nrow(test))) +
+  scale_color_manual(values = vec_col0)
+  labs(title = "RA074", x = "WT change in relative abundance after RA induction", y = "HET change in relative abundance after RA induction")
+```
+
+
+
+
+#plotting by Patient and Sampling time
+
+
+```{r, fig.height=8, fig.width=12}
+ggplot(data_plots_g, aes(fill=Taxon, y=count, x=Patient_SamplTime)) + 
+    geom_bar(stat="identity", position = "fill") +
+    scale_fill_manual(values = getPalette(length(unique(data_plots_g$Taxon)))) +
+    #facet_wrap(.~Community, ncol = 9) +
+   theme(text = element_text(size = 15), axis.text.x = element_text(angle = 90)) +
+  labs(y = "Relative Abundance", title = "Genus level") 
+
+ggplot(data_plots_f, aes(fill=Taxon, y=count, x=Patient_SamplTime)) + 
+    geom_bar(stat="identity", position = "fill") +
+    scale_fill_manual(values = getPalette(length(unique(data_plots_f$Taxon)))) +
+    #facet_wrap(.~Community, ncol = 9) +
+   theme(text = element_text(size = 15), axis.text.x = element_text(angle = 90)) +
+  labs(y = "Relative Abundance", title = "Family  level") 
+
+ggplot(data_plots_o, aes(fill=Taxon, y=count, x=Patient_SamplTime)) + 
+    geom_bar(stat="identity", position = "fill") +
+    scale_fill_manual(values = getPalette(length(unique(data_plots_o$Taxon)))) +
+    #facet_wrap(.~Community, ncol = 9) +
+   theme(text = element_text(size = 15), axis.text.x = element_text(angle = 90)) +
+  labs(y = "Relative Abundance", title = "Order level") 
+
+ggplot(data_plots_c, aes(fill=Taxon, y=count, x=Patient_SamplTime)) + 
+    geom_bar(stat="identity", position = "fill") +
+    scale_fill_manual(values = getPalette(length(unique(data_plots_c$Taxon)))) +
+    #facet_wrap(.~Community, ncol = 9) +
+   theme(text = element_text(size = 15), axis.text.x = element_text(angle = 90)) +
+  labs(y = "Relative Abundance", title = "Class level") 
+```
+
+
+
+
+#plotting PCAs to see which bacteria are driving separation
+```{r, fig.height=8, fig.width=12}
+for_pca <- as.data.frame(t(genus[, 2:(ncol(genus)-1)]))
+for_pca <- log(for_pca + 0.00000001)
+
+colnames(for_pca) <- paste(genus$Group.1)
+for_pca$Patient <- str_split(rownames(for_pca), "-", simplify = TRUE)[,2]
+for_pca$MouseID <- str_split(rownames(for_pca), "-", simplify = TRUE)[,3]
+for_pca$Sample <- rownames(for_pca)
+for_pca <- merge(for_pca, table[,c(1,6,9)], by.x = "Sample", by.y = "index")
+for_pca$BeforeAfterArthritisInd <- ifelse(is.na(for_pca$BeforeAfterArthritisInd), "OriginalSample",for_pca$BeforeAfterArthritisInd)
+for_pca$MouseType <- ifelse(is.na(for_pca$MouseType), "OriginalSample",for_pca$MouseType)
+rownames(for_pca) <- for_pca$Sample
+
+pca <- PCA(for_pca, 
+           scale = FALSE, 
+           quali.sup = c(1, (ncol(for_pca)-4):ncol(for_pca))
+           )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-3
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-2
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-1
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)
+             )
+
+fviz_pca_biplot(pca, 
+                habillage = ncol(for_pca)-3,
+                addEllipses = TRUE,
+                repel = TRUE)
+
+```
+
+plotting same PCAs without RA 068
+
+```{r, fig.height=8, fig.width=12}
+for_pca_no068 <- for_pca[!for_pca$Patient == "RA068",]
+
+pca <- PCA(for_pca_no068, 
+           scale = FALSE, 
+           quali.sup = c(1, 2, (ncol(for_pca_no068)-4):ncol(for_pca_no068))
+           )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-3
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-2
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-1
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)
+             )
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca) - 4
+             )
+
+fviz_pca_biplot(pca, 
+                habillage = ncol(for_pca)-3,
+                addEllipses = TRUE,
+                repel = TRUE)
+
+```
+
+
+individual patient sample PCAs (to see if the individual mouse ID is causing separation)
+```{r, fig.height=6, fig.width=8}
+temp <- for_pca[for_pca$Patient ==  "RA011", ]
+pca <- PCA(temp[-1,], 
+           scale = FALSE, 
+           quali.sup = c(1, (ncol(for_pca)-4):ncol(for_pca))
+           )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-1
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-2
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)
+             )
+
+```
+
+
+```{r, fig.height=6, fig.width=8}
+temp <- for_pca[for_pca$Patient ==  "RA026", ]
+pca <- PCA(temp[-1,], 
+           scale = FALSE, 
+           quali.sup = c(1, (ncol(for_pca)-4):ncol(for_pca))
+           )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-1
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-2
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)
+             )
+
+```
+
+
+
+```{r, fig.height=6, fig.width=8}
+temp <- for_pca[for_pca$Patient ==  "RA032", ]
+pca <- PCA(temp, 
+           scale = FALSE, 
+           quali.sup = c(1, (ncol(for_pca)-4):ncol(for_pca))
+           )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-1
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-2
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)
+             )
+```
+
+
+
+```{r, fig.height=6, fig.width=8}
+temp <- for_pca[for_pca$Patient ==  "RA068", ]
+pca <- PCA(temp, 
+           scale = FALSE, 
+           quali.sup = c(1, (ncol(for_pca)-4):ncol(for_pca))
+           )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-1
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-2
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)
+             )
+```
+
+
+
+```{r, fig.height=6, fig.width=8}
+temp <- for_pca[for_pca$Patient ==  "RA074", ]
+pca <- PCA(temp, 
+           scale = FALSE, 
+           quali.sup = c(1, (ncol(for_pca)-4):ncol(for_pca))
+           )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-1
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-2
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)
+             )
+```
+
+
+##seeing whether clustering happens by Cage-ID
+
+```{r}
+cage <- read.table("/media/deepan/Deepan/RA_Bottini/igm-storage2.ucsd.edu/220908_M00436_0727_000000000-KLG6T/cage-id.csv",
+                     sep="\t", 
+                    dec=".", 
+                    header = TRUE, 
+                    stringsAsFactors = FALSE, 
+                    na.strings = NA, 
+                    check.names = FALSE, 
+                    comment.char = ""
+                     )
+
+cage <- cage[seq(1, nrow(cage),2),c(2,3,4)]
+cage$CageID <- sapply(cage$CageID, as.character)
+```
+
+
+
+```{r, fig.height=6, fig.width=8}
+for_pca <- as.data.frame(t(genus[, 2:(ncol(genus)-1)]))
+for_pca <- log(for_pca + 0.00000001)
+colnames(for_pca) <- paste(genus$Group.1)
+for_pca$Patient <- str_split(rownames(for_pca), "-", simplify = TRUE)[,2]
+for_pca$MouseID <- str_split(rownames(for_pca), "-", simplify = TRUE)[,3]
+#for_pca$MouseID <-  ifelse(str_detect(for_pca$MouseID, "0"), str_split(for_pca$MouseID, "0", simplify = TRUE)[,2], for_pca$MouseID)
+for_pca$Sample <- rownames(for_pca)
+for_pca <- merge(for_pca, table[,c(1,6,9)], by.x = "Sample", by.y = "index")
+for_pca$BeforeAfterArthritisInd <- ifelse(is.na(for_pca$BeforeAfterArthritisInd), "OriginalSample",for_pca$BeforeAfterArthritisInd)
+for_pca$MouseType <- ifelse(is.na(for_pca$MouseType), "OriginalSample",for_pca$MouseType)
+for_pca <- merge(for_pca, cage, by = 'MouseID', all.x =  TRUE, all.y =  FALSE)
+
+rownames(for_pca) <- for_pca$Sample
+
+
+pca <- PCA(for_pca[-ncol(for_pca),], 
+           scale = FALSE, 
+           quali.sup = c(1,2, (ncol(for_pca)-4):ncol(for_pca))
+           )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-3
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-1
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-2
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca) -4
+             )
+
+
+```
+
+
+##seeing how ankle swelling scores factor (has to be run after cage-PCA segment)
+
+```{r, fig.height=6, fig.width=8}
+
+swell <- for_pca[,c(1,2,(ncol(for_pca)-4):ncol(for_pca))]
+swell$PatType <- paste(swell$Patient, swell$MouseType, sep = "-")
+swell <- swell[!swell$BeforeAfterArthritisInd == "OriginalSample",]
+swell <- swell[swell$BeforeAfterArthritisInd == "after",]
+swell$CageID <- sapply(swell$CageID, as.character)
+
+ggplot(swell[!is.na(swell$AnkleSwell),], aes(x=PatType, y=AnkleSwell, fill = Patient)) +
+  geom_boxplot(outlier.size = 1.5) +
+  stat_summary(fun=mean, geom="point", shape=20, size=3, color="black", fill="black") + #adds mean to the boxplots
+  geom_dotplot(binaxis='y', stackdir='center',
+                 position=position_dodge(1), dotsize = 0.8) +
+  theme(text = element_text(size = 15), axis.text.x = element_text(angle = 90)) +
+  labs(title = "Ankle Swelling Scores", y="swelling on week 4", x="patient")
+
+
+ggplot(swell[!is.na(swell$AnkleSwell),], aes(x=CageID, y=AnkleSwell, fill = CageID)) +
+  geom_boxplot(outlier.size = 1.5) +
+  stat_summary(fun=mean, geom="point", shape=20, size=3, color="black", fill="black") + #adds mean to the boxplots
+  geom_dotplot(binaxis='y', stackdir='center',
+                 position=position_dodge(1), dotsize = 0.8) +
+  theme(text = element_text(size = 15), axis.text.x = element_text(angle = 90)) +
+  labs(title = "Ankle Swelling Scores", y="swelling on week 4", x="patient")
+
+```
+
+
+
+
+
+
+#see if the differences between pre and post RA induction clusters differently based on genotype or just MOuseID?
+
+## PCA on the differences before and after mannan injection don't seem  to be valuable and dont show a clear picture. Need not run these. 
+
+```{r}
+# genotype <- genotype[-50,]
+# genotype <- genotype[-50,]#NEED TO FIX THIS!! DATA ON MOUSE ID IS WRONG! @sho!! ##FIXED!! Sample naming issue
+genotype$Sample <- paste(str_split(genotype$Sample, "-", simplify = TRUE)[,2], genotype$MouseID, sep = "-")
+genotype <- genotype[!is.na(genotype$MouseID),]
+genotype <- genotype[genotype$MouseID != "",]
+```
+
+
+```{r, fig.height=6, fig.width=8}
+for_pca <- as.data.frame(t(test_diff[, 3:ncol(test_diff)]))
+# for_pca <- log(for_pca + 0.00000001)
+colnames(for_pca) <- paste(test_diff$Taxon)
+for_pca$Patient <- str_split(rownames(for_pca), "-", simplify = TRUE)[,1]
+for_pca$MouseID <- str_split(rownames(for_pca), "-", simplify = TRUE)[,2]
+for_pca$Sample <- rownames(for_pca)
+
+for_pca <- merge(for_pca, genotype[seq(1, nrow(genotype),2),], by = 'Sample', all.x =  TRUE, all.y =  FALSE)
+rownames(for_pca) <- for_pca$Sample
+
+
+pca <- PCA(for_pca, 
+           scale = FALSE, 
+           quali.sup = c(1, (ncol(for_pca)-4):ncol(for_pca))
+           )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-3
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-1
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)
+             )
+
+fviz_pca_biplot(pca, 
+             repel = TRUE, 
+             addEllipses = TRUE,
+             habillage = ncol(for_pca)-3
+             )
+
+```
+
+
+
+
+individual patients PCA - to see if mouseIDs make a diff
+```{r, fig.height=6, fig.width=8}
+temp <- for_pca[for_pca$Patient ==  "RA011", ]
+pca <- PCA(temp[-3,], 
+           scale = FALSE, 
+           quali.sup = c(1, (ncol(for_pca)-4):ncol(for_pca))
+           )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-1
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)
+             )
+```
+
+
+
+```{r, fig.height=6, fig.width=8}
+temp <- for_pca[for_pca$Patient ==  "RA026", ]
+pca <- PCA(temp[-3,], 
+           scale = FALSE, 
+           quali.sup = c(1, (ncol(for_pca)-4):ncol(for_pca))
+           )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-1
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)
+             )
+```
+
+
+
+```{r, fig.height=6, fig.width=8}
+temp <- for_pca[for_pca$Patient ==  "RA032", ]
+pca <- PCA(temp[-3,], 
+           scale = FALSE, 
+           quali.sup = c(1, (ncol(for_pca)-4):ncol(for_pca))
+           )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-1
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)
+             )
+```
+
+
+
+```{r, fig.height=6, fig.width=8}
+temp <- for_pca[for_pca$Patient ==  "RA068", ]
+pca <- PCA(temp, 
+           scale = FALSE, 
+           quali.sup = c(1, (ncol(for_pca)-4):ncol(for_pca))
+           )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-1
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)
+             )
+```
+
+
+
+```{r, fig.height=6, fig.width=8}
+temp <- for_pca[for_pca$Patient ==  "RA074", ]
+pca <- PCA(temp[-3,], 
+           scale = FALSE, 
+           quali.sup = c(1, (ncol(for_pca)-4):ncol(for_pca))
+           )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-1
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)
+             )
+```
+
+
+
+
+
+
+
+
+
+
+
+
+## PCA on the differences before and after mannan injection don't seem  to be valuable and dont show a clear picture. Need not run these. 
+
+
+```{r, fig.height=6, fig.width=8}
+for_pca <- as.data.frame(t(test_diff[, 3:ncol(test_diff)]))
+# for_pca <- log(for_pca + 0.00000001)
+colnames(for_pca) <- paste(test_diff$Taxon)
+for_pca$Patient <- str_split(rownames(for_pca), "-", simplify = TRUE)[,1]
+for_pca$MouseID <- str_split(rownames(for_pca), "-", simplify = TRUE)[,2]
+for_pca$Sample <- rownames(for_pca)
+
+for_pca <- merge(for_pca, cage[seq(1, nrow(cage),2),c(2,3)], by = 'MouseID', all.x =  TRUE, all.y =  FALSE)
+for_pca <- merge(for_pca, genotype[seq(1, nrow(genotype),2),], by = 'Sample', all.x =  TRUE, all.y =  FALSE)
+
+
+rownames(for_pca) <- for_pca$Sample
+
+
+pca <- PCA(for_pca, 
+           scale = FALSE, 
+           quali.sup = c(1,2, (ncol(for_pca)-3):ncol(for_pca))
+           )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-3
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-1
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)-2
+             )
+
+fviz_pca_ind(pca, 
+             repel = TRUE, 
+             habillage = ncol(for_pca)
+             )
+
+fviz_pca_biplot(pca, 
+             repel = TRUE, 
+             addEllipses = TRUE,
+             habillage = ncol(for_pca)-3
+             )
+
+```
+
+
+
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+plotting by mouse
+```{r, fig.height=8, fig.width=12}
+ggplot(data_plots_g, aes(fill=Taxon, y=count, x=MouseID)) + 
+    geom_bar(stat="identity", position = "fill") +
+    scale_fill_manual(values = getPalette(length(unique(data_plots_g$Taxon)))) +
+    #facet_wrap(.~Community, ncol = 9) +
+   theme(text = element_text(size = 15), axis.text.x = element_text(angle = 90, size = 7)) +
+  labs(y = "Relative Abundance", title = "Genus level") 
+
+ggplot(data_plots_f, aes(fill=Taxon, y=count, x=MouseID)) + 
+    geom_bar(stat="identity", position = "fill") +
+    scale_fill_manual(values = getPalette(length(unique(data_plots_f$Taxon)))) +
+    #facet_wrap(.~Community, ncol = 9) +
+   theme(text = element_text(size = 15), axis.text.x = element_text(angle = 90, size = 8)) +
+  labs(y = "Relative Abundance", title = "Family  level") 
+
+ggplot(data_plots_o, aes(fill=Taxon, y=count, x=MouseID)) + 
+    geom_bar(stat="identity", position = "fill") +
+    scale_fill_manual(values = getPalette(length(unique(data_plots_o$Taxon)))) +
+    #facet_wrap(.~Community, ncol = 9) +
+   theme(text = element_text(size = 15), axis.text.x = element_text(angle = 90, size = 8)) +
+  labs(y = "Relative Abundance", title = "Order level") 
+
+ggplot(data_plots_c, aes(fill=Taxon, y=count, x=MouseID)) + 
+    geom_bar(stat="identity", position = "fill") +
+    scale_fill_manual(values = getPalette(length(unique(data_plots_c$Taxon)))) +
+    #facet_wrap(.~Community, ncol = 9) +
+   theme(text = element_text(size = 15), axis.text.x = element_text(angle = 90, size = 8)) +
+  labs(y = "Relative Abundance", title = "Class level") 
+```
+plotting by SamplingTime
+```{r, fig.height=8, fig.width=8}
+ggplot(data_plots_g, aes(fill=Taxon, y=count, x=SamplingTime)) + 
+    geom_bar(stat="identity", position = "fill") +
+    scale_fill_manual(values = getPalette(length(unique(data_plots_g$Taxon)))) +
+    #facet_wrap(.~Community, ncol = 9) +
+   theme(text = element_text(size = 15), axis.text.x = element_text(angle = 90)) +
+  labs(y = "Relative Abundance", title = "Genus level") 
+
+ggplot(data_plots_f, aes(fill=Taxon, y=count, x=SamplingTime)) + 
+    geom_bar(stat="identity", position = "fill") +
+    scale_fill_manual(values = getPalette(length(unique(data_plots_f$Taxon)))) +
+    #facet_wrap(.~Community, ncol = 9) +
+   theme(text = element_text(size = 15), axis.text.x = element_text(angle = 90)) +
+  labs(y = "Relative Abundance", title = "Family  level") 
+
+ggplot(data_plots_o, aes(fill=Taxon, y=count, x=SamplingTime)) + 
+    geom_bar(stat="identity", position = "fill") +
+    scale_fill_manual(values = getPalette(length(unique(data_plots_o$Taxon)))) +
+    #facet_wrap(.~Community, ncol = 9) +
+   theme(text = element_text(size = 15), axis.text.x = element_text(angle = 90)) +
+  labs(y = "Relative Abundance", title = "Order level") 
+
+ggplot(data_plots_c, aes(fill=Taxon, y=count, x=SamplingTime)) + 
+    geom_bar(stat="identity", position = "fill") +
+    scale_fill_manual(values = getPalette(length(unique(data_plots_c$Taxon)))) +
+    #facet_wrap(.~Community, ncol = 9) +
+   theme(text = element_text(size = 15), axis.text.x = element_text(angle = 90)) +
+  labs(y = "Relative Abundance", title = "Class level") 
+```
+
+plotting based on initial levels of Prevotella
+```{r, fig.height=8, fig.width=8}
+ggplot(data_plots_g, aes(fill=Taxon, y=count, x=Prev_SampleTime)) + 
+    geom_bar(stat="identity", position = "fill") +
+    scale_fill_manual(values = getPalette(length(unique(data_plots_g$Taxon)))) +
+    #facet_wrap(.~Community, ncol = 9) +
+   theme(text = element_text(size = 15), axis.text.x = element_text(angle = 90)) +
+  labs(y = "Relative Abundance", title = "Genus level") 
+
+ggplot(data_plots_f, aes(fill=Taxon, y=count, x=PrevotellaEnriched)) + 
+    geom_bar(stat="identity", position = "fill") +
+    scale_fill_manual(values = getPalette(length(unique(data_plots_f$Taxon)))) +
+    #facet_wrap(.~Community, ncol = 9) +
+   theme(text = element_text(size = 15), axis.text.x = element_text(angle = 90)) +
+  labs(y = "Relative Abundance", title = "Family  level") 
+
+ggplot(data_plots_o, aes(fill=Taxon, y=count, x=PrevotellaEnriched)) + 
+    geom_bar(stat="identity", position = "fill") +
+    scale_fill_manual(values = getPalette(length(unique(data_plots_o$Taxon)))) +
+    #facet_wrap(.~Community, ncol = 9) +
+   theme(text = element_text(size = 15), axis.text.x = element_text(angle = 90)) +
+  labs(y = "Relative Abundance", title = "Order level") 
+
+ggplot(data_plots_c, aes(fill=Taxon, y=count, x=PrevotellaEnriched)) + 
+    geom_bar(stat="identity", position = "fill") +
+    scale_fill_manual(values = getPalette(length(unique(data_plots_c$Taxon)))) +
+    #facet_wrap(.~Community, ncol = 9) +
+   theme(text = element_text(size = 15), axis.text.x = element_text(angle = 90)) +
+  labs(y = "Relative Abundance", title = "Class level") 
+```
+
+#--------------------------linear_regression_plots or PCA--------------------------------------------------------
+linear regression between Prevotella-rich and poor fecal sample inoculations
+
+```{r, fig.height=6, fig.width=8}
+
+reg_plots <- aggregate(data_plots_g[,c(3)], by = list(data_plots_g$PrevotellaEnriched, data_plots_g$Taxon), FUN = mean, na.rm = TRUE)
+reg_plots_g <- reg_plots[reg_plots$Group.1 == "Prevotella-Rich",2:3]
+reg_plots_g$y <- reg_plots[reg_plots$Group.1 == "Prevotella-Poor",3]
+reg_plots_g$Enriched_in_Prevotella_Rich <- reg_plots_g$x / reg_plots_g$y
+reg_plots_g <- reg_plots_g[order(reg_plots_g$Enriched_in_Prevotella_Rich, decreasing = TRUE),]
+reg_plots_g$Enriched_in_Prevotella_Rich[1:15] <- reg_plots_g$Group.2[1:15]
+reg_plots_g$Enriched_in_Prevotella_Rich[15:nrow(reg_plots_g)] <- NA
+reg_plots_g$Enriched_in_Prevotella_Poor <- reg_plots_g$y / reg_plots_g$x
+reg_plots_g <- reg_plots_g[order(reg_plots_g$Enriched_in_Prevotella_Poor, decreasing = TRUE),]
+reg_plots_g$Enriched_in_Prevotella_Poor[1:15] <- reg_plots_g$Group.2[1:15]
+reg_plots_g$Enriched_in_Prevotella_Poor[15:nrow(reg_plots_g)] <- NA
+
+
+#reg_plots_g[,2:3] <- lapply(reg_plots_g[,2:3], log10)
+ggplot(reg_plots_g, aes(x = x, y = y)) +
+  geom_point(aes(color = Enriched_in_Prevotella_Rich), size = 2.5) +
+    scale_color_manual(values = getPalette(15)) +
+     geom_smooth(method='lm', alpha = 0.2, level = 0.95) +
+    scale_x_sqrt() +
+  scale_y_sqrt()  + 
+  ggtitle("Taxa (genus-level) enriched in mice inoc with Prevotella-rich fecal samples") + labs(y = "inoc w Prevotella-Poor fecalsample", x = "inoc w Prevotella-rich fecalsample" )+ theme(plot.title = element_text(size = 15))
+
+ggplot(reg_plots_g, aes(x = x, y = y)) +
+  geom_point(aes(color = Enriched_in_Prevotella_Poor), size = 2.5) +
+    scale_color_manual(values = getPalette(15)) +
+     geom_smooth(method='lm', alpha = 0.2, level = 0.95) +
+    scale_x_sqrt() +
+  scale_y_sqrt()  + 
+  ggtitle("Taxa (genus-level) higher in mice inoc with Prevotella-poor fecal samples") + labs(y = "inoc w Prevotella-Poor fecalsample", x = "inoc w Prevotella-rich fecalsample" )+ theme(plot.title = element_text(size = 15))
+```
+
+linear regression between Prevotella-rich pre and post treatment and Prevotella poor pre and post treatment
+
+```{r, fig.height=6, fig.width=8}
+
+reg_plots <- aggregate(data_plots_g[,c(3)], by = list(data_plots_g$Prev_SampleTime, data_plots_g$Taxon), FUN = mean, na.rm = TRUE)
+reg_plots_g <- reg_plots[reg_plots$Group.1 == "Prevotella-Poor-AfterRAinduction",2:3]
+reg_plots_g$y <- reg_plots[reg_plots$Group.1 == "Prevotella-Poor-BeforeRAinduction",3]
+reg_plots_g$Change <- reg_plots_g$y - reg_plots_g$x
+reg_plots_g <- reg_plots_g[order(reg_plots_g$Change, decreasing = TRUE),]
+reg_plots_g$Change[1:15] <- reg_plots_g$Group.2[1:15]
+reg_plots_g$Change[15:nrow(reg_plots_g)] <- NA
+
+reg_plots_gg <- reg_plots[reg_plots$Group.1 == "Prevotella-Rich-AfterRAinduction",2:3]
+reg_plots_gg$y <- reg_plots[reg_plots$Group.1 == "Prevotella-Rich-BeforeRAinduction",3]
+reg_plots_gg$Change <- reg_plots_gg$y - reg_plots_gg$x
+reg_plots_gg <- reg_plots_gg[order(reg_plots_gg$Change, decreasing = TRUE),]
+reg_plots_gg$Change[1:15] <- reg_plots_gg$Group.2[1:15]
+reg_plots_gg$Change[15:nrow(reg_plots_gg)] <- NA
+
+
+
+#reg_plots_g[,2:3] <- lapply(reg_plots_g[,2:3], log10)
+ggplot(reg_plots_g, aes(x = x, y = y)) +
+  geom_point(aes(color = Change), size = 2.5) +
+    scale_color_manual(values = getPalette(15)) +
+     geom_smooth(method='lm', alpha = 0.2, level = 0.95) +
+    scale_x_sqrt() +
+  scale_y_sqrt()  + 
+  ggtitle("Taxa (genus-level) relative levels in PrevotellaRich samples before/after Arthritis Induction") + labs(y = "relative abundance before Arthritis induction", x = "relative abundance after Arthritis induction" )+ theme(plot.title = element_text(size = 12))
+
+ggplot(reg_plots_gg, aes(x = x, y = y)) +
+  geom_point(aes(color = Change), size = 2.5) +
+    scale_color_manual(values = getPalette(15)) +
+     geom_smooth(method='lm', alpha = 0.2, level = 0.95) +
+    scale_x_sqrt() +
+  scale_y_sqrt()  + 
+  ggtitle("Taxa (genus-level) relative levels in PrevotellaPoor samples before/after Arthritis Induction") + labs(y = "relative abundance before Arthritis induction", x = "relative abundance after Arthritis induction" )+ theme(plot.title = element_text(size = 12))
+```
+
+linear regression between Samplings from Pre-arthritis and Post arthritis induction
+
+```{r, fig.height=6, fig.width=8}
+
+reg_plots <- aggregate(data_plots_g[,c(3)], by = list(data_plots_g$SamplingTime, data_plots_g$Taxon), FUN = mean, na.rm = TRUE)
+reg_plots_g <- reg_plots[reg_plots$Group.1 == "BeforeRAinduction",2:3]
+reg_plots_g$y <- reg_plots[reg_plots$Group.1 == "AfterRAinduction",3]
+reg_plots_g$Enriched_beforeRAinduction <- reg_plots_g$x / reg_plots_g$y
+reg_plots_g <- reg_plots_g[order(reg_plots_g$Enriched_beforeRAinduction, decreasing = TRUE),]
+reg_plots_g$Enriched_beforeRAinduction[1:15] <- reg_plots_g$Group.2[1:15]
+reg_plots_g$Enriched_beforeRAinduction[15:nrow(reg_plots_g)] <- NA
+reg_plots_g$Enriched_afterRAinduction <- reg_plots_g$y / reg_plots_g$x
+reg_plots_g <- reg_plots_g[order(reg_plots_g$Enriched_afterRAinduction, decreasing = TRUE),]
+reg_plots_g$Enriched_afterRAinduction[1:15] <- reg_plots_g$Group.2[1:15]
+reg_plots_g$Enriched_afterRAinduction[15:nrow(reg_plots_g)] <- NA
+
+
+#reg_plots_g[,2:3] <- lapply(reg_plots_g[,2:3], log10)
+ggplot(reg_plots_g, aes(x = x, y = y)) +
+  geom_point(aes(color = Enriched_beforeRAinduction), size = 2.5) +
+    scale_color_manual(values = getPalette(15)) +
+     geom_smooth(method='lm', alpha = 0.2, level = 0.95) +
+    scale_x_sqrt() +
+  scale_y_sqrt()  + 
+  ggtitle("Taxa (genus-level) enriched after Arthritis induction") + labs(y = "before Arthritis Induction", x = "after Arthritis induction" )+ theme(plot.title = element_text(size = 15))
+
+ggplot(reg_plots_g, aes(x = x, y = y)) +
+  geom_point(aes(color = Enriched_afterRAinduction), size = 2.5) +
+    scale_color_manual(values = getPalette(15)) +
+     geom_smooth(method='lm', alpha = 0.2, level = 0.95) +
+    scale_x_sqrt() +
+  scale_y_sqrt()  + 
+  ggtitle("Taxa (genus-level) abundant before Arthritis induction") + labs(y = "before Arthritis Induction", x = "after Arthritis induction" )+ theme(plot.title = element_text(size = 15))
+```
+
+
+
+#_-----------------------unmelting dfs again for PCA-------------------------------------------
+```{r, fig.height=8, fig.width=10}
+reg_plots_g <- reshape(data_plots_g[,1:3], timevar = "Sample", idvar = c("Taxon"), direction = "wide")
+colnames(reg_plots_g) <- str_split(colnames(reg_plots_g),"\\.", simplify = TRUE)[,2]
+reg_plots_g <- reg_plots_g[,-86] #removing the sample that has NO READS after control subtraction
+
+reg_plots_g <- as.data.frame(t(reg_plots_g))
+colnames(reg_plots_g) <- reg_plots_g[1,]
+reg_plots_g <- reg_plots_g[-1,]
+reg_plots_g <- lapply(reg_plots_g, as.numeric)
+
+reg_plots_g <- cbind(reg_plots_g, table[!str_detect(table$index, "Ext|Zym|B-RA074-229-3"),c(1,73:79)])
+
+library(FactoMineR)
+
+# pca_genus <- PCA(reg_plots_g[reg_plots_g$Patient == "RA032",1:44],
+#     scale = TRUE
+#     )
+
+pca_genus <- PCA(reg_plots_g[,c(1:44)],
+    scale = TRUE
+    )
+
+
+
+library(factoextra)
+
+fviz_pca_ind(pca_genus, 
+             geom.ind = "point",
+             col.ind  = reg_plots_g$Patient, 
+             repel = TRUE, title = "Individuals_PCA",
+             addEllipses = TRUE, ellipse.type = "confidence", mean.point = FALSE)
+
+fviz_pca_biplot(pca_genus, 
+                col.var = "black",
+                col.ind = reg_plots_g$Patient,
+                addEllipses = TRUE, ellipse.type = "confidence",
+                geom = "point", 
+                repel =TRUE, title = "All communities", legend.show = FALSE)
+
+TEST <- fviz_pca_biplot(pca_genus, label = "none")
+
+ggplot(cbind(TEST$data, reg_plots_g[,c("BeforeAfterArthritisInd", "Patient","PrevotellaRich")]), aes(x=x,y=y,col=Patient, shape=BeforeAfterArthritisInd)) + geom_point() + theme(plot.title = element_text(size = 15)) + ggtitle("Individuals-PCA")
+
+fviz_pca_biplot(pca_genus, 
+                col.var = "black",
+                col.ind = reg_plots_g$Patient,
+                addEllipses = TRUE, ellipse.type = "confidence",
+                geom = "point", 
+                repel =TRUE, title = "All communities", legend.show = FALSE)
+
+fviz_pca_biplot(pca_genus, 
+                col.var = "black",
+                col.ind = reg_plots_g[reg_plots_g$Patient == "RA032", ]$BeforeAfterArthritisInd,
+                addEllipses = TRUE, ellipse.type = "confidence",
+                geom = "point", 
+                repel =TRUE, title = "All communities", legend.show = FALSE)
+
+```
+
+
+plotting indiividual PCAs for each patient
+```{r, fig.height=8, fig.width=14}
+
+names <- unique(reg_plots_g$Patient)
+
+# for(i in names){
+  pca_genus <- PCA(reg_plots_g[reg_plots_g$Patient == i,1:44],
+    scale = TRUE, graph = FALSE
+    )
+  TEST <- fviz_pca_biplot(pca_genus, label = "none")
+  plot <- cbind(TEST$data, reg_plots_g[reg_plots_g$Patient == i,]$BeforeAfterArthritisInd, reg_plots_g[reg_plots_g$Patient == i,]$MouseID)
+  colnames(plot)[(ncol(plot)-1):ncol(plot)] <- c("BeforeAfterArthritisInd", "MouseID")
+  ggplot(plot, aes(x=x,y=y,col=MouseID, shape = BeforeAfterArthritisInd)) + geom_point() + theme(plot.title = element_text(size = 12)) + ggtitle("Individuals-PCA for patient:",i)
+  ggplot(plot, aes(x=x,y=y,col=BeforeAfterArthritisInd)) + geom_point() + theme(plot.title = element_text(size = 12)) + ggtitle("Individuals-PCA for patient:",i) 
+ fviz_pca_biplot(pca_genus, 
+                col.var = "black",
+                col.ind = reg_plots_g[reg_plots_g$Patient == i, ]$BeforeAfterArthritisInd,
+                addEllipses = TRUE, ellipse.type = "confidence",
+                geom = "point", 
+                repel =TRUE, title = i, legend.title = "Before/After ArthrInd.")
+# }
+
+
+```
+
+
+
+
+
+
+this is to find the highest rank every annotation has
+```{r}
+table_t <- as.data.frame(t(table))
+colnames(table_t) <- table_t[1,]             
+table_t <- table_t[-1,]
+
+names <- c()
+
+for(j in 1:71){
+  for(i in 1:6){
+    if(str_split(str_split(rownames(table_t), ";", simplify = TRUE)[j,i],"_", simplify = TRUE)[3] == ""){
+      names <- rbind(names, paste(str_split(str_split(rownames(table_t), ";", simplify = TRUE)[j,(i-1)],"_", simplify = TRUE)[1], str_split(str_split(rownames(table_t), ";", simplify = TRUE)[j,(i-1)],"_", simplify = TRUE)[3], sep = "_"))
+      break
+    }
+    
+    else if(i == 6){
+      names <- rbind(names, paste(str_split(str_split(rownames(table_t), ";", simplify = TRUE)[j,6],"_", simplify = TRUE)[1], str_split(str_split(rownames(table_t), ";", simplify = TRUE)[j,6],"_", simplify = TRUE)[3], sep = "_"))
+      break
+    }
+  }
+  
+}
+test <- as.data.frame(t(table))
+colnames(test) <- test[1,]
+test <- test [-1,]
+test$Taxa <- c(names, rep("", 7))
+test <- test[1:71,]
+test[,1:125] <- lapply(test[,1:125], as.numeric)
+test <- aggregate(test[,1:125], by = list(test$Taxa), FUN = sum, na.rm = TRUE)
+test <- as.data.frame(t(test))
+colnames(test) <- test[1,]
+test <- test[-1,]
+table <- table[,-(2:72)]
+table <- cbind(table, test)
+table[,9:ncol(table)] <- lapply(table[,9:ncol(table)], as.numeric)
+table$SamplingTime <- as.character(table$SamplingTime)
+#table_test <- aggregate(table, by = list(table[2:72]), FUN=sum, na.rm = TRUE)
+```
+
+
+```{r}
+colnames(median)
+```
+
+subtracting extraction controls
+```{r}
+control <- as.data.frame(apply(table[str_detect(table$index, "Ext"),9:ncol(table)], 2, function(x) mean(x)))
+colnames(control) <- "control"
+co <- control$control
+
+
+table[,9:ncol(table)] <- as.data.frame(t(as.data.frame(apply(as.data.frame(t(table[,9:ncol(table)])), 2, function(x) x-co))))
+
+table[,9:ncol(table)][table[,9:ncol(table)] < 0] <- 0
+table <- table[!str_detect(table$index, "Ext|Zymo"),]
+table[,9:ncol(table)] <- as.data.frame(t(as.data.frame(apply(table[,9:ncol(table)], 1, function(x) x/sum(x)))))
+
+median <- as.data.frame(t(as.data.frame((apply(table[,9:ncol(table)], 2, function(x) median(x))))))
+median <- sort(median, decreasing = TRUE)
+# median$other <- apply(median[1,10:ncol(median)],1,function(x) sum(x))
+
+
+
+
+c <- match(colnames(median), colnames(table[,9:ncol(table)]))
+c <-  c+8
+
+o <- 25
+
+table_top10 <- table[,c(1:8, c)]
+table_top10$other <- apply(table_top10[,(9+o):ncol(table_top10)], 1, function(x) sum(x))
+table_top10 <- table_top10[,c(1:(o+9), ncol(table_top10))]
+# table_top10 <- table_top10[,c(1:(o+1), ncol(table_top10),(o+2):(ncol(table_top10)-1))]
+```
+
+melting
+```{r}
+data_plots <- reshape::melt(table_top10)
+colnames(data_plots)[9:10] <- c("Taxon", "count")
+
+# data_plots$Community <- str_split(data_plots$Sample, "\\.", simplify = TRUE)[, 2]
+# data_plots$Replicate <- str_split(data_plots$Sample, "\\.", simplify = TRUE)[, 3]
+# 
+# data_plots$Community <- as.numeric(as.character(data_plots$Community))
+# 
+# data_plots$Taxon[data_plots$Taxon == "Niastella"] <- "Chitinophagaceae"
+# 
+# data_plots <- data_plots[order(data_plots$Taxon), ]
+# 
+# data_plots$Taxon <- ordered(data_plots$Taxon, levels = c(unique(data_plots$Taxon)[!unique(data_plots$Taxon)%in%c("p__Bacteroidetes", "k__Bacteria")], "p__Bacteroidetes", "k__Bacteria"))
+```
+RA plots
+```{r, fig.height=8, fig.width=12}
+ggplot(data_plots, aes(fill=Taxon, y=count, x=Patient)) + 
+    geom_bar(stat="identity", position = "fill") +
+    scale_fill_manual(values = getPalette(length(unique(data_plots$Taxon)))) +
+    #facet_wrap(.~Community, ncol = 9) +
+   theme(text = element_text(size = 15)) +
+  labs(y = "Relative Abundance") 
+```
+
+
+
+
+
+normalize
+```{r}
+table <- as.data.frame(lapply(table, as.numeric))
+table <- as.data.frame(apply(table, 2, function(x) x/sum(x)))
+rownames(table) <- names[2:length(names)]
+```
+exporting to tsv
+```{r}
+write.table(table, file= "/media/deepan/Deepan/RA_Bottini/igm-storage2.ucsd.edu/220908_M00436_0727_000000000-KLG6T/exported-table/norm-feature-table.tsv", sep = "\t", col.names = NA, row.names = TRUE, quote = FALSE)
+```
+
