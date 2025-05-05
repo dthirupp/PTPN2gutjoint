@@ -1,0 +1,7 @@
+# Tell GitHub Linguist to treat these as documentation, not source code
+*.html linguist-documentation
+*.md linguist-documentation
+*.png linguist-documentation
+*.jpeg linguist-documentation
+*.jpg linguist-documentation
+*.svg linguist-documentation
