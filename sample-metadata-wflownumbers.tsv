@@ -1,0 +1,200 @@
+sample-ID	samplename	type	Patient	OriginalFecal	Patient002086	MouseID	keep_for_clustering	BeforeAfterFMT	BeforeAfterArthritisInd	MouseType	PatientbeforeafterRA	PatientTypebeforeafterRA	Total_Cells	CD4+	total_Tregs	RORgt+Treg	CD4+RORgt+Foxp3-	Flow_values_ankle	Ankle_swelling	cartilage_depletion
+#q2:types	categorical	categorical	categorical	categorical	categorical	categorical	categorical	categorical	categorical	categorical	categorical	categorical	numeric	numeric	numeric	numeric	numeric	numeric	numeric	numeric
+12766.DIET.011.1S	12766.DIET.011.1S	experiment	RA#11	yes	no		yes				RA#11	RA#11								
+12766.DIET.026.1S	12766.DIET.026.1S	experiment	RA#26	yes	no		no				RA#26	RA#26								
+12766.DIET.032.1S	12766.DIET.032.1S	experiment	RA#32	yes	no		yes				RA#32	RA#32								
+12766.DIET.074.1S	12766.DIET.074.1S	experiment	RA#74	yes	no		yes				RA#74	RA#74								
+12766.DIET.068.1S	12766.DIET.068.1S	experiment	RA#68	yes	no		yes				RA#68	RA#68								
+12766.DIET.002.1S	12766.DIET.002.1S	experiment	RA#02	yes	yes		yes				RA#02	RA#02								
+12766.DIET.086.1S	12766.DIET.086.1S	experiment	RA#86	yes	yes		yes				RA#86	RA#86								
+B-402a	B-402a	experiment	RA#02	no	yes	402	no	before_FMT	before_mannan	HET	RA#02_before_mannan	RA#02_HET_before_mannan								
+B-402b	B-402b	experiment	RA#02	no	yes	402	yes	after_FMT	before_mannan	HET	RA#02_before_mannan	RA#02_HET_before_mannan								
+B-402c	B-402c	experiment	RA#02	no	yes	402	yes	after_FMT	after_mannan	HET	RA#02_after_mannan	RA#02_HET_after_mannan	14550000	2560800	769695	4801.5	26190	1840000	3	2
+B-403a	B-403a	experiment	RA#02	no	yes	403	no	before_FMT	before_mannan	HET	RA#02_before_mannan	RA#02_HET_before_mannan								
+B-403b	B-403b	experiment	RA#02	no	yes	403	yes	after_FMT	before_mannan	HET	RA#02_before_mannan	RA#02_HET_before_mannan								
+B-403c	B-403c	experiment	RA#02	no	yes	403	yes	after_FMT	after_mannan	HET	RA#02_after_mannan	RA#02_HET_after_mannan	16550000	2863150	797710	5296	29790	2040000	2	2
+B-404a	B-404a	experiment	RA#02	no	yes	404	no	before_FMT	before_mannan	WT	RA#02_before_mannan	RA#02_WT_before_mannan								
+B-404b	B-404b	experiment	RA#02	no	yes	404	yes	after_FMT	before_mannan	WT	RA#02_before_mannan	RA#02_WT_before_mannan								
+B-404c	B-404c	experiment	RA#02	no	yes	404	yes	after_FMT	after_mannan	WT	RA#02_after_mannan	RA#02_WT_after_mannan	19050000	3276600	920115	6096	24765	3195000	1.5	1
+B-405a	B-405a	experiment	RA#02	no	yes	405	no	before_FMT	before_mannan	HET	RA#02_before_mannan	RA#02_HET_before_mannan								
+B-405b	B-405b	experiment	RA#02	no	yes	405	yes	after_FMT	before_mannan	HET	RA#02_before_mannan	RA#02_HET_before_mannan								
+B-405c	B-405c	experiment	RA#02	no	yes	405	yes	after_FMT	after_mannan	HET	RA#02_after_mannan	RA#02_HET_after_mannan	14300000	2702700	749320	5434	22880	1955000	1.5	2
+B-406a	B-406a	experiment	RA#02	no	yes	406	no	before_FMT	before_mannan	WT	RA#02_before_mannan	RA#02_WT_before_mannan								
+B-406b	B-406b	experiment	RA#02	no	yes	406	yes	after_FMT	before_mannan	WT	RA#02_before_mannan	RA#02_WT_before_mannan								
+B-406c	B-406c	experiment	RA#02	no	yes	406	yes	after_FMT	after_mannan	WT	RA#02_after_mannan	RA#02_WT_after_mannan	14150000	2122500	628260	5518.5	24055	2035000	2	1.5
+B-407a	B-407a	experiment	RA#86	no	yes	407	no	before_FMT	before_mannan	WT	RA#86_before_mannan	RA#86_WT_before_mannan								
+B-407b	B-407b	experiment	RA#86	no	yes	407	yes	after_FMT	before_mannan	WT	RA#86_before_mannan	RA#86_WT_before_mannan								
+B-407c	B-407c	experiment	RA#86	no	yes	407	yes	after_FMT	after_mannan	WT	RA#86_after_mannan	RA#86_WT_after_mannan	8100000	1458000	419580	3078	10530	1605000	0.5	1
+B-408a	B-408a	experiment	RA#86	no	yes	408	no	before_FMT	before_mannan	WT	RA#86_before_mannan	RA#86_WT_before_mannan								
+B-408b	B-408b	experiment	RA#86	no	yes	408	yes	after_FMT	before_mannan	WT	RA#86_before_mannan	RA#86_WT_before_mannan								
+B-408c	B-408c	experiment	RA#86	no	yes	408	yes	after_FMT	after_mannan	WT	RA#86_after_mannan	RA#86_WT_after_mannan	10700000	1808300	544630	3745	13910	1890000	1.5	1.5
+B-409a	B-409a	experiment	RA#86	no	yes	409	no	before_FMT	before_mannan	HET	RA#86_before_mannan	RA#86_HET_before_mannan								
+B-409b	B-409b	experiment	RA#86	no	yes	409	yes	after_FMT	before_mannan	HET	RA#86_before_mannan	RA#86_HET_before_mannan								
+B-409c	B-409c	experiment	RA#86	no	yes	409	yes	after_FMT	after_mannan	HET	RA#86_after_mannan	RA#86_HET_after_mannan	13400000	1956400	589600	4556	11926	4415000	2	1.5
+B-410a	B-410a	experiment	RA#86	no	yes	410	no	before_FMT	before_mannan	HET	RA#86_before_mannan	RA#86_HET_before_mannan								
+B-410b	B-410b	experiment	RA#86	no	yes	410	yes	after_FMT	before_mannan	HET	RA#86_before_mannan	RA#86_HET_before_mannan								
+B-410c	B-410c	experiment	RA#86	no	yes	410	yes	after_FMT	after_mannan	HET	RA#86_after_mannan	RA#86_HET_after_mannan	10700000	2118600	595990	4601	18190	2445000	2.5	2.5
+B-411a	B-411a	experiment	RA#86	no	yes	411	no	before_FMT	before_mannan	HET	RA#86_before_mannan	RA#86_HET_before_mannan								
+B-411b	B-411b	experiment	RA#86	no	yes	411	yes	after_FMT	before_mannan	HET	RA#86_before_mannan	RA#86_HET_before_mannan								
+B-411c	B-411c	experiment	RA#86	no	yes	411	yes	after_FMT	after_mannan	HET	RA#86_after_mannan	RA#86_HET_after_mannan	12400000	2331200	652240	4712	21080	2170000	2.5	3
+Ctl-ExtBlank-A4-P2	Ctl-ExtBlank-A4-P2	control					no													
+Ctl-ExtBlank-B4-P2	Ctl-ExtBlank-B4-P2	control					no													
+Ctl-ExtBlank-C4-P2	Ctl-ExtBlank-C4-P2	control					no													
+Ctl-ExtBlank-D4-P2	Ctl-ExtBlank-D4-P2	control					no													
+Ctl-ExtBlank-E4-P2	Ctl-ExtBlank-E4-P2	control					no													
+Ctl-ExtBlank-F4-P2	Ctl-ExtBlank-F4-P2	control					no													
+Ctl-ExtBlank-G4-P2	Ctl-ExtBlank-G4-P2	control					no													
+Ctl-ExtBlank-H3-P2	Ctl-ExtBlank-H3-P2	control					no													
+Ctl-ExtBlank-H4-P2	Ctl-ExtBlank-H4-P2	control					no													
+Ctl-PCRBlank1	Ctl-PCRBlank1	control					no													
+Ctl-PCRBlank2	Ctl-PCRBlank2	control					no													
+Ctl-PCRBlank3	Ctl-PCRBlank3	control					no													
+Ctl-PCRBlank4	Ctl-PCRBlank4	control					no													
+Ctl-ZymoMockA-A5-P2	Ctl-ZymoMockA-A5-P2	control					no													
+Ctl-ZymoMockB-B5-P2	Ctl-ZymoMockB-B5-P2	control					no													
+Ctl-ZymoMockC-C5-P2	Ctl-ZymoMockC-C5-P2	control					no													
+Ctl-ZymoMockD-D5-P2	Ctl-ZymoMockD-D5-P2	control					no													
+Ctl-ZymoMockE-E5-P2	Ctl-ZymoMockE-E5-P2	control					no													
+Ctl-ZymoMockF-F5-P2	Ctl-ZymoMockF-F5-P2	control					no													
+Ctl-ZymoMockG-G5-P2	Ctl-ZymoMockG-G5-P2	control					no													
+Ctl-ZymoMockH-H5-P2	Ctl-ZymoMockH-H5-P2	control					no													
+Ctl-ZymoPCR-A	Ctl-ZymoPCR-A	control					no													
+Ctl-ZymoPCR-B	Ctl-ZymoPCR-B	control					no													
+Ctl-ZymoPCR-C	Ctl-ZymoPCR-C	control					no													
+Ctl-ZymoPCR-D	Ctl-ZymoPCR-D	control					no													
+B-ExtBlank-E5-P2	B-ExtBlank-E5-P2	control					no													
+B-ExtBlank-E6-P1	B-ExtBlank-E6-P1	control					no													
+B-ExtBlank-F5-P2	B-ExtBlank-F5-P2	control					no													
+B-ExtBlank-F6-P1	B-ExtBlank-F6-P1	control					no													
+B-ExtBlank-G4-P2	B-ExtBlank-G4-P2	control					no													
+B-ExtBlank-G5-P2	B-ExtBlank-G5-P2	control					no													
+B-ExtBlank-G6-P1	B-ExtBlank-G6-P1	control					no													
+B-ExtBlank-H4-P2	B-ExtBlank-H4-P2	control					no													
+B-ExtBlank-H5-P2	B-ExtBlank-H5-P2	control					no													
+B-ExtBlank-H6-P1	B-ExtBlank-H6-P1	control					no													
+B-RA011-014-2	B-RA011-014-2	experiment	RA#11	no	no	14	yes	after_FMT	before_mannan	HET	RA#11_before_mannan	RA#11_HET_before_mannan								
+B-RA011-014-3	B-RA011-014-3	experiment	RA#11	no	no	14	yes	after_FMT	after_mannan	HET	RA#11_after_mannan	RA#11_HET_after_mannan	1420000	163300	30388	937.2	1704			
+B-RA011-018-2	B-RA011-018-2	experiment	RA#11	no	no	18	yes	after_FMT	before_mannan	WT	RA#11_before_mannan	RA#11_WT_before_mannan								
+B-RA011-018-3	B-RA011-018-3	experiment	RA#11	no	no	18	yes	after_FMT	after_mannan	WT	RA#11_after_mannan	RA#11_WT_after_mannan	1070000	167990	30552	941.6	577.8			
+B-RA011-031-2	B-RA011-031-2	experiment	RA#11	no	no	31	yes	after_FMT	before_mannan	HET	RA#11_before_mannan	RA#11_HET_before_mannan								
+B-RA011-031-3	B-RA011-031-3	experiment	RA#11	no	no	31	yes	after_FMT	after_mannan	HET	RA#11_after_mannan	RA#11_HET_after_mannan	12000000	1536000	410400	14400	12000			
+B-RA011-034-2	B-RA011-034-2	experiment	RA#11	no	no	34	yes	after_FMT	before_mannan	WT	RA#11_before_mannan	RA#11_WT_before_mannan								
+B-RA011-034-3	B-RA011-034-3	experiment	RA#11	no	no	34	yes	after_FMT	after_mannan	WT	RA#11_after_mannan	RA#11_WT_after_mannan	1520000	173280	30552	1824	1824			
+B-RA011-039-2	B-RA011-039-2	experiment	RA#11	no	no	39	yes	after_FMT	before_mannan	WT	RA#11_before_mannan	RA#11_WT_before_mannan								
+B-RA011-039-3	B-RA011-039-3	experiment	RA#11	no	no	39	yes	after_FMT	after_mannan	WT	RA#11_after_mannan	RA#11_WT_after_mannan	440000	53240	9460	264	704			
+B-RA011-281-2	B-RA011-281-2	experiment	RA#11	no	no	281	yes	after_FMT	before_mannan	HET	RA#11_before_mannan	RA#11_HET_before_mannan								
+B-RA011-281-3	B-RA011-281-3	experiment	RA#11	no	no	281	yes	after_FMT	after_mannan	HET	RA#11_after_mannan	RA#11_HET_after_mannan	8250000	990000	269775	11550	10725			
+B-RA011-282-2	B-RA011-282-2	experiment	RA#11	no	no	282	yes	after_FMT	before_mannan	HET	RA#11_before_mannan	RA#11_HET_before_mannan								
+B-RA011-282-3	B-RA011-282-3	experiment	RA#11	no	no	282	yes	after_FMT	after_mannan	HET	RA#11_after_mannan	RA#11_HET_after_mannan	7080000	1040760	271164	16992	8496			
+B-RA011-283-2	B-RA011-283-2	experiment	RA#11	no	no	283	yes	after_FMT	before_mannan	WT	RA#11_before_mannan	RA#11_WT_before_mannan								
+B-RA011-283-3	B-RA011-283-3	experiment	RA#11	no	no	283	yes	after_FMT	after_mannan	WT	RA#11_after_mannan	RA#11_WT_after_mannan	3740000	867680	201586	7480	5236			
+B-RA011-284-2	B-RA011-284-2	experiment	RA#11	no	no	284	yes	after_FMT	before_mannan	HET	RA#11_before_mannan	RA#11_HET_before_mannan								
+B-RA011-284-3	B-RA011-284-3	experiment	RA#11	no	no	284	yes	after_FMT	after_mannan	HET	RA#11_after_mannan	RA#11_HET_after_mannan	7750000	1309750	314650	16275	7595			
+B-RA011-296-2	B-RA011-296-2	experiment	RA#11	no	no	296	yes	after_FMT	before_mannan	WT	RA#11_before_mannan	RA#11_WT_before_mannan								
+B-RA011-296-3	B-RA011-296-3	experiment	RA#11	no	no	296	yes	after_FMT	after_mannan	WT	RA#11_after_mannan	RA#11_WT_after_mannan	9390000	1164360	312687	23475	11268			
+B-RA011-297-2	B-RA011-297-2	experiment	RA#11	no	no	297	yes	after_FMT	before_mannan	HET	RA#11_before_mannan	RA#11_HET_before_mannan								
+B-RA011-297-3	B-RA011-297-3	experiment	RA#11	no	no	297	yes	after_FMT	after_mannan	HET	RA#11_after_mannan	RA#11_HET_after_mannan	4650000	716100	175305	8370	4650			
+B-RA011-298-2	B-RA011-298-2	experiment	RA#11	no	no	298	yes	after_FMT	before_mannan	WT	RA#11_before_mannan	RA#11_WT_before_mannan								
+B-RA011-298-3	B-RA011-298-3	experiment	RA#11	no	no	298	yes	after_FMT	after_mannan	WT	RA#11_after_mannan	RA#11_WT_after_mannan	7470000	1113030	312246	15687	9711			
+B-RA011-299-2	B-RA011-299-2	experiment	RA#11	no	no	299	yes	after_FMT	before_mannan	WT	RA#11_before_mannan	RA#11_WT_before_mannan								
+B-RA011-299-3	B-RA011-299-3	experiment	RA#11	no	no	299	yes	after_FMT	after_mannan	WT	RA#11_after_mannan	RA#11_WT_after_mannan	7730000	1144040	313838	15460	7730			
+B-RA011-300-2	B-RA011-300-2	experiment	RA#11	no	no	300	yes	after_FMT	before_mannan	HET	RA#11_before_mannan	RA#11_HET_before_mannan								
+B-RA011-300-3	B-RA011-300-3	experiment	RA#11	no	no	300	yes	after_FMT	after_mannan	HET	RA#11_after_mannan	RA#11_HET_after_mannan	2270000	435840	101242	3632	2951			
+B-RA026-020-2	B-RA026-020-2	experiment	RA#26	no	no	20	no	after_FMT	before_mannan	WT	RA#26_before_mannan	RA#26_WT_before_mannan								
+B-RA026-020-3	B-RA026-020-3	experiment	RA#26	no	no	20	no	after_FMT	after_mannan	WT	RA#26_after_mannan	RA#26_WT_after_mannan								
+B-RA026-024-2	B-RA026-024-2	experiment	RA#26	no	no	24	no	after_FMT	before_mannan	HET	RA#26_before_mannan	RA#26_HET_before_mannan								
+B-RA026-024-3	B-RA026-024-3	experiment	RA#26	no	no	24	no	after_FMT	after_mannan	HET	RA#26_after_mannan	RA#26_HET_after_mannan								
+B-RA026-401-2	B-RA026-401-2	experiment	RA#26	no	no	401	no	after_FMT	before_mannan	WT	RA#26_before_mannan	RA#26_WT_before_mannan								
+B-RA026-401-3	B-RA026-401-3	experiment	RA#26	no	no	401	no	after_FMT	after_mannan	WT	RA#26_after_mannan	RA#26_WT_after_mannan								
+B-RA026-402-2	B-RA026-402-2	experiment	RA#26	no	no	402	no	after_FMT	before_mannan	WT	RA#26_before_mannan	RA#26_WT_before_mannan								
+B-RA026-402-3	B-RA026-402-3	experiment	RA#26	no	no	402	no	after_FMT	after_mannan	WT	RA#26_after_mannan	RA#26_WT_after_mannan								
+B-RA026-403-2	B-RA026-403-2	experiment	RA#26	no	no	403	no	after_FMT	before_mannan	WT	RA#26_before_mannan	RA#26_WT_before_mannan								
+B-RA026-403-3	B-RA026-403-3	experiment	RA#26	no	no	403	no	after_FMT	after_mannan	WT	RA#26_after_mannan	RA#26_WT_after_mannan								
+B-RA026-609-2	B-RA026-609-2	experiment	RA#26	no	no	609	no	after_FMT	before_mannan	HET	RA#26_before_mannan	RA#26_HET_before_mannan								
+B-RA026-609-3	B-RA026-609-3	experiment	RA#26	no	no	609	no	after_FMT	after_mannan	HET	RA#26_after_mannan	RA#26_HET_after_mannan								
+B-RA032-265-2	B-RA032-265-2	experiment	RA#32	no	no	265	yes	after_FMT	before_mannan	HET	RA#32_before_mannan	RA#32_HET_before_mannan								
+B-RA032-266-2	B-RA032-266-2	experiment	RA#32	no	no	266	yes	after_FMT	before_mannan	HET	RA#32_before_mannan	RA#32_HET_before_mannan								
+B-RA032-267-2	B-RA032-267-2	experiment	RA#32	no	no	267	yes	after_FMT	before_mannan	WT	RA#32_before_mannan	RA#32_WT_before_mannan								
+B-RA032-268-2	B-RA032-268-2	experiment	RA#32	no	no	268	yes	after_FMT	before_mannan	WT	RA#32_before_mannan	RA#32_WT_before_mannan								
+B-RA032-269-2	B-RA032-269-2	experiment	RA#32	no	no	269	yes	after_FMT	before_mannan	WT	RA#32_before_mannan	RA#32_WT_before_mannan								
+B-RA032-296-2	B-RA032-296-2	experiment	RA#32	no	no	296	yes	after_FMT	before_mannan	WT	RA#32_before_mannan	RA#32_WT_before_mannan								
+B-RA032-297-2	B-RA032-297-2	experiment	RA#32	no	no	297	yes	after_FMT	before_mannan	WT	RA#32_before_mannan	RA#32_WT_before_mannan								
+B-RA032-298-2	B-RA032-298-2	experiment	RA#32	no	no	298	yes	after_FMT	before_mannan	HET	RA#32_before_mannan	RA#32_HET_before_mannan								
+B-RA032-410-2	B-RA032-410-2	experiment	RA#32	no	no	410	yes	after_FMT	before_mannan	HET	RA#32_before_mannan	RA#32_HET_before_mannan								
+B-RA032-410-3	B-RA032-410-3	experiment	RA#32	no	no	410	yes	after_FMT	after_mannan	HET	RA#32_after_mannan	RA#32_HET_after_mannan	6070000	498347	148108	16389	16996			
+B-RA032-411-2	B-RA032-411-2	experiment	RA#32	no	no	411	yes	after_FMT	before_mannan	WT	RA#32_before_mannan	RA#32_WT_before_mannan								
+B-RA032-411-3	B-RA032-411-3	experiment	RA#32	no	no	411	yes	after_FMT	after_mannan	WT	RA#32_after_mannan	RA#32_WT_after_mannan	3140000	262190	85094	8792	8164			
+B-RA032-412-2	B-RA032-412-2	experiment	RA#32	no	no	412	yes	after_FMT	before_mannan	HET	RA#32_before_mannan	RA#32_HET_before_mannan								
+B-RA032-412-3	B-RA032-412-3	experiment	RA#32	no	no	412	yes	after_FMT	after_mannan	HET	RA#32_after_mannan	RA#32_HET_after_mannan	4440000	319236	98124	7104	5328			
+B-RA032-413-2	B-RA032-413-2	experiment	RA#32	no	no	413	yes	after_FMT	before_mannan	WT	RA#32_before_mannan	RA#32_WT_before_mannan								
+B-RA032-413-3	B-RA032-413-3	experiment	RA#32	no	no	413	yes	after_FMT	after_mannan	WT	RA#32_after_mannan	RA#32_WT_after_mannan	4790000	565220	184415	17723	12933			
+B-RA032-414-2	B-RA032-414-2	experiment	RA#32	no	no	414	yes	after_FMT	before_mannan	HET	RA#32_before_mannan	RA#32_HET_before_mannan								
+B-RA032-414-3	B-RA032-414-3	experiment	RA#32	no	no	414	yes	after_FMT	after_mannan	HET	RA#32_after_mannan	RA#32_HET_after_mannan	5170000	527340	197494	17061	14476			
+B-RA068-277-2	B-RA068-277-2	experiment	RA#68	no	no	277	yes	after_FMT	before_mannan	HET	RA#68_before_mannan	RA#68_HET_before_mannan								
+B-RA068-277-3	B-RA068-277-3	experiment	RA#68	no	no	277	yes	after_FMT	after_mannan	HET	RA#68_after_mannan	RA#68_HET_after_mannan	4640000	723840	153584	8816	5104			
+B-RA068-277b-2	B-RA068-277b-2	experiment	RA#68	no	no	277b	yes	after_FMT	before_mannan	HET	RA#68_before_mannan	RA#68_HET_before_mannan								
+B-RA068-277b-3	B-RA068-277b-3	experiment	RA#68	no	no	277b	yes	after_FMT	after_mannan	HET	RA#68_after_mannan	RA#68_HET_after_mannan	5020000	1606400	302706	7028	16064			
+B-RA068-278-2	B-RA068-278-2	experiment	RA#68	no	no	278	yes	after_FMT	before_mannan	HET	RA#68_before_mannan	RA#68_HET_before_mannan								
+B-RA068-278-3	B-RA068-278-3	experiment	RA#68	no	no	278	yes	after_FMT	after_mannan	HET	RA#68_after_mannan	RA#68_HET_after_mannan	6230000	1152550	279104	11837	7476			
+B-RA068-278b-2	B-RA068-278b-2	experiment	RA#68	no	no	278b	yes	after_FMT	before_mannan	WT	RA#68_before_mannan	RA#68_WT_before_mannan								
+B-RA068-278b-3	B-RA068-278b-3	experiment	RA#68	no	no	278b	yes	after_FMT	after_mannan	WT	RA#68_after_mannan	RA#68_WT_after_mannan	5070000	1196520	292032	12675	12675			
+B-RA068-279-2	B-RA068-279-2	experiment	RA#68	no	no	279	yes	after_FMT	before_mannan	WT	RA#68_before_mannan	RA#68_WT_before_mannan								
+B-RA068-279-3	B-RA068-279-3	experiment	RA#68	no	no	279	yes	after_FMT	after_mannan	WT	RA#68_after_mannan	RA#68_WT_after_mannan	6450000	838500	249615	14190	11610			
+B-RA068-279b-2	B-RA068-279b-2	experiment	RA#68	no	no	279b	yes	after_FMT	before_mannan	WT	RA#68_before_mannan	RA#68_WT_before_mannan								
+B-RA068-279b-3	B-RA068-279b-3	experiment	RA#68	no	no	279b	yes	after_FMT	after_mannan	WT	RA#68_after_mannan	RA#68_WT_after_mannan	3240000	878040	210924	8748	12636			
+B-RA068-280b-2	B-RA068-280b-2	experiment	RA#68	no	no	280b	yes	after_FMT	before_mannan	WT	RA#68_before_mannan	RA#68_WT_before_mannan								
+B-RA068-280b-3	B-RA068-280b-3	experiment	RA#68	no	no	280b	yes	after_FMT	after_mannan	WT	RA#68_after_mannan	RA#68_WT_after_mannan	4150000	958650	240700	7885	17015			
+B-RA068-281b-2	B-RA068-281b-2	experiment	RA#68	no	no	281b	yes	after_FMT	before_mannan	WT	RA#68_before_mannan	RA#68_WT_before_mannan								
+B-RA068-281b-3	B-RA068-281b-3	experiment	RA#68	no	no	281b	yes	after_FMT	after_mannan	WT	RA#68_after_mannan	RA#68_WT_after_mannan	8170000	1642170	435461	18791	33497			
+B-RA068-282b-2	B-RA068-282b-2	experiment	RA#68	no	no	282b	yes	after_FMT	before_mannan	HET	RA#68_before_mannan	RA#68_HET_before_mannan								
+B-RA068-282b-3	B-RA068-282b-3	experiment	RA#68	no	no	282b	yes	after_FMT	after_mannan	HET	RA#68_after_mannan	RA#68_HET_after_mannan	6680000	1249160	296592	9352	17368			
+B-RA068-290-2	B-RA068-290-2	experiment	RA#68	no	no	290	yes	after_FMT	before_mannan	HET	RA#68_before_mannan	RA#68_HET_before_mannan								
+B-RA068-290-3	B-RA068-290-3	experiment	RA#68	no	no	290	yes	after_FMT	after_mannan	HET	RA#68_after_mannan	RA#68_HET_after_mannan	5430000	1178310	276387	10317	19548			
+B-RA068-291-2	B-RA068-291-2	experiment	RA#68	no	no	291	yes	after_FMT	before_mannan	HET	RA#68_before_mannan	RA#68_HET_before_mannan								
+B-RA068-291-3	B-RA068-291-3	experiment	RA#68	no	no	291	yes	after_FMT	after_mannan	HET	RA#68_after_mannan	RA#68_HET_after_mannan	5390000	1573880	355740	9702	21021			
+B-RA068-292-2	B-RA068-292-2	experiment	RA#68	no	no	292	yes	after_FMT	before_mannan	WT	RA#68_before_mannan	RA#68_WT_before_mannan								
+B-RA068-292-3	B-RA068-292-3	experiment	RA#68	no	no	292	yes	after_FMT	after_mannan	WT	RA#68_after_mannan	RA#68_WT_after_mannan	4450000	1179250	260770	10680	23140			
+B-RA068-293-2	B-RA068-293-2	experiment	RA#68	no	no	293	yes	after_FMT	before_mannan	HET	RA#68_before_mannan	RA#68_HET_before_mannan								
+B-RA068-293-3	B-RA068-293-3	experiment	RA#68	no	no	293	yes	after_FMT	after_mannan	HET	RA#68_after_mannan	RA#68_HET_after_mannan	9840000	1584240	413280	21648	24600			
+B-RA068-294-2	B-RA068-294-2	experiment	RA#68	no	no	294	yes	after_FMT	before_mannan	HET	RA#68_before_mannan	RA#68_HET_before_mannan								
+B-RA068-294-3	B-RA068-294-3	experiment	RA#68	no	no	294	yes	after_FMT	after_mannan	HET	RA#68_after_mannan	RA#68_HET_after_mannan	2310000	471240	121737	4158	11319			
+B-RA068-295-2	B-RA068-295-2	experiment	RA#68	no	no	295	yes	after_FMT	before_mannan	HET	RA#68_before_mannan	RA#68_HET_before_mannan								
+B-RA068-295-3	B-RA068-295-3	experiment	RA#68	no	no	295	yes	after_FMT	after_mannan	HET	RA#68_after_mannan	RA#68_HET_after_mannan	6090000	1138830	299628	12789	36540			
+B-RA074-011-2	B-RA074-011-2	experiment	RA#74	no	no	11	yes	after_FMT	before_mannan	WT	RA#74_before_mannan	RA#74_WT_before_mannan								
+B-RA074-011-3	B-RA074-011-3	experiment	RA#74	no	no	11	yes	after_FMT	after_mannan	WT	RA#74_after_mannan	RA#74_WT_after_mannan								
+B-RA074-017-2	B-RA074-017-2	experiment	RA#74	no	no	17	yes	after_FMT	before_mannan	WT	RA#74_before_mannan	RA#74_WT_before_mannan								
+B-RA074-017-3	B-RA074-017-3	experiment	RA#74	no	no	17	yes	after_FMT	after_mannan	WT	RA#74_after_mannan	RA#74_WT_after_mannan	3610000	519840	122740	8303	12996			
+B-RA074-019-2	B-RA074-019-2	experiment	RA#74	no	no	19	yes	after_FMT	before_mannan	HET	RA#74_before_mannan	RA#74_HET_before_mannan								
+B-RA074-019-3	B-RA074-019-3	experiment	RA#74	no	no	19	yes	after_FMT	after_mannan	HET	RA#74_after_mannan	RA#74_HET_after_mannan	2410000	392830	83145	5302	11568			
+B-RA074-025-2	B-RA074-025-2	experiment	RA#74	no	no	25	yes	after_FMT	before_mannan	WT	RA#74_before_mannan	RA#74_WT_before_mannan								
+B-RA074-025-3	B-RA074-025-3	experiment	RA#74	no	no	25	yes	after_FMT	after_mannan	WT	RA#74_after_mannan	RA#74_WT_after_mannan	8530000	1560990	394086	21325	29855			
+B-RA074-036-2	B-RA074-036-2	experiment	RA#74	no	no	36	yes	after_FMT	before_mannan	HET	RA#74_before_mannan	RA#74_HET_before_mannan								
+B-RA074-036-3	B-RA074-036-3	experiment	RA#74	no	no	36	yes	after_FMT	after_mannan	HET	RA#74_after_mannan	RA#74_HET_after_mannan	8190000	851760	210483	9828	6552			
+B-RA074-040-2	B-RA074-040-2	experiment	RA#74	no	no	40	yes	after_FMT	before_mannan	WT	RA#74_before_mannan	RA#74_WT_before_mannan								
+B-RA074-040-3	B-RA074-040-3	experiment	RA#74	no	no	40	yes	after_FMT	after_mannan	WT	RA#74_after_mannan	RA#74_WT_after_mannan	480000	70080	10416	259.2	624			
+B-RA074-099-2	B-RA074-099-2	experiment	RA#74	no	no	99	yes	after_FMT	before_mannan	WT	RA#74_before_mannan	RA#74_WT_before_mannan								
+B-RA074-099-3	B-RA074-099-3	experiment	RA#74	no	no	99	yes	after_FMT	after_mannan	WT	RA#74_after_mannan	RA#74_WT_after_mannan	60500000	3406150	1203950	60500	90750			
+B-RA074-226-2	B-RA074-226-2	experiment	RA#74	no	no	226	yes	after_FMT	before_mannan	WT	RA#74_before_mannan	RA#74_WT_before_mannan								
+B-RA074-226-3	B-RA074-226-3	experiment	RA#74	no	no	226	yes	after_FMT	after_mannan	WT	RA#74_after_mannan	RA#74_WT_after_mannan	1180000	143960	26550	1416	2714			
+B-RA074-227-2	B-RA074-227-2	experiment	RA#74	no	no	227	yes	after_FMT	before_mannan	HET	RA#74_before_mannan	RA#74_HET_before_mannan								
+B-RA074-227-3	B-RA074-227-3	experiment	RA#74	no	no	227	yes	after_FMT	after_mannan	HET	RA#74_after_mannan	RA#74_HET_after_mannan	2820000	258030	64860	3384	5358			
+B-RA074-228-2	B-RA074-228-2	experiment	RA#74	no	no	228	yes	after_FMT	before_mannan	HET	RA#74_before_mannan	RA#74_HET_before_mannan								
+B-RA074-228-3	B-RA074-228-3	experiment	RA#74	no	no	228	yes	after_FMT	after_mannan	HET	RA#74_after_mannan	RA#74_HET_after_mannan	7800000	1232400	307320	14820	23400			
+B-RA074-229-2	B-RA074-229-2	experiment	RA#74	no	no	229	yes	after_FMT	before_mannan	HET	RA#74_before_mannan	RA#74_HET_before_mannan								
+B-RA074-229-3	B-RA074-229-3	experiment	RA#74	no	no	229	yes	after_FMT	after_mannan	HET	RA#74_after_mannan	RA#74_HET_after_mannan	36400000	2700880	844480	54600	43680			
+B-RA074-406-2	B-RA074-406-2	experiment	RA#74	no	no	406	yes	after_FMT	before_mannan	WT	RA#74_before_mannan	RA#74_WT_before_mannan								
+B-RA074-406-3	B-RA074-406-3	experiment	RA#74	no	no	406	yes	after_FMT	after_mannan	WT	RA#74_after_mannan	RA#74_WT_after_mannan	2700000	269730	62640	5670	7020			
+B-RA074-407-2	B-RA074-407-2	experiment	RA#74	no	no	407	yes	after_FMT	before_mannan	WT	RA#74_before_mannan	RA#74_WT_before_mannan								
+B-RA074-407-3	B-RA074-407-3	experiment	RA#74	no	no	407	yes	after_FMT	after_mannan	WT	RA#74_after_mannan	RA#74_WT_after_mannan	5950000	1011500	221935	17850	16660			
+B-RA074-408-2	B-RA074-408-2	experiment	RA#74	no	no	408	yes	after_FMT	before_mannan	WT	RA#74_before_mannan	RA#74_WT_before_mannan								
+B-RA074-408-3	B-RA074-408-3	experiment	RA#74	no	no	408	yes	after_FMT	after_mannan	WT	RA#74_after_mannan	RA#74_WT_after_mannan	2560000	248832	64768	4864	6656			
+B-RA074-409-2	B-RA074-409-2	experiment	RA#74	no	no	409	yes	after_FMT	before_mannan	WT	RA#74_before_mannan	RA#74_WT_before_mannan								
+B-RA074-409-3	B-RA074-409-3	experiment	RA#74	no	no	409	yes	after_FMT	after_mannan	WT	RA#74_after_mannan	RA#74_WT_after_mannan	10800000	1328400	382320	28080	19440			
+B-ZymoMockA-A5-P2	B-ZymoMockA-A5-P2	control					no													
+B-ZymoMockA-A6-P1	B-ZymoMockA-A6-P1	control					no													
+B-ZymoMockB-B5-P2	B-ZymoMockB-B5-P2	control					no													
+B-ZymoMockB-B6-P1	B-ZymoMockB-B6-P1	control					no													
+B-ZymoMockC-C5-P2	B-ZymoMockC-C5-P2	control					no													
+B-ZymoMockC-C6-P1	B-ZymoMockC-C6-P1	control					no													
+B-ZymoMockD-D5-P2	B-ZymoMockD-D5-P2	control					no													
+B-ZymoMockD-D6-P1	B-ZymoMockD-D6-P1	control					no													
